@@ -1,0 +1,16 @@
+import express from "express";
+import { authMiddleware } from "../../middleware/auth.middleware.js";
+import { verifyRole } from "../../middleware/verify.role.middleware.js";
+import { UserRoles } from "../../shared/application.constants.js";
+import { registerBusiness } from "../controllers/business.controller.js";
+
+const businessRouter = express.Router();
+
+businessRouter.post(
+  "/register",
+  authMiddleware,
+  verifyRole([UserRoles["Super Admin"]]),
+  registerBusiness,
+);
+
+export default businessRouter;

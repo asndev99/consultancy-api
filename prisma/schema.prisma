@@ -1,0 +1,433 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Business {
+  id Int @id @default(autoincrement())
+
+  businessCode    String @unique
+  studentSequence Int    @default(0)
+  timeZone        String @default("Asia/Karachi")
+
+  name         String  @unique
+  isActive     Boolean @default(true)
+  isDeleted    Boolean @default(false)
+  address      String
+  businessLogo String
+
+  googleMapUrl String @default("")
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt           DateTime             @default(now()) @db.Timestamptz()
+  updatedAt           DateTime             @updatedAt @db.Timestamptz()
+  deletedAt           DateTime?            @db.Timestamptz()
+  users               User[]
+  studentApplications StudentApplication[]
+  universities        University[]
+  universityCourses   UniversityCourses[]
+  branchManagers      BranchManager[]
+  students            Student[]
+  branches            Branch[]
+}
+
+model Branch {
+  id Int @id @default(autoincrement())
+
+  name String @unique
+
+  branchCode String @unique
+
+  businessId Int
+  Business   Business @relation(fields: [businessId], references: [id])
+
+  city    String
+  country String
+
+  //location perspective.
+  address   String
+  latitude  Float?
+  longitude Float?
+
+  isActive  Boolean @default(false)
+  // FIX: was @default(true) — a new branch should not start soft-deleted. Changed to false.
+  isDeleted Boolean @default(false)
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  // FIX: added @default(now())
+  createdAt           DateTime             @default(now()) @db.Timestamptz()
+  updatedAt           DateTime             @updatedAt @db.Timestamptz()
+  deletedAt           DateTime?            @db.Timestamptz()
+  branchManagers      BranchManager[]
+  users               User[]
+  studentApplications StudentApplication[]
+  students            Student[]
+}
+
+model User {
+  id Int @id @default(autoincrement())
+
+  userNo String @unique
+
+  role         String //roles defined in shared/application.constants.js
+  status       String //status defined in shared/application.constants.js
+  inviteSentAt DateTime? @db.Timestamptz()
+
+  // Personal details
+  name         String
+  email        String
+  password     String
+  profileMedia String?
+
+  businessId Int? // Nullable for application admin
+  Business   Business? @relation(fields: [businessId], references: [id])
+
+  branchId Int? // Nullable for application admin and owner
+  Branch   Branch? @relation(fields: [branchId], references: [id])
+
+  backUpEmailAddress String?
+
+  isEmailVerified Boolean @default(false)
+  isActive        Boolean @default(true)
+  isDeleted       Boolean @default(false)
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+
+  branchManagers BranchManager[]
+
+  managedApplications StudentApplication[] @relation("ApplicationManager")
+  officerApplications StudentApplication[] @relation("AdmissionTeamOfficer")
+  studentApplications StudentApplication[] @relation("Counselor")
+  // sessions            Sessions[]
+
+  @@unique([businessId, email])
+}
+
+//Because one branch can have many managers in future
+model BranchManager {
+  id Int @id @default(autoincrement())
+
+  isActive Boolean @default(false)
+  branchId Int
+  Branch   Branch  @relation(fields: [branchId], references: [id])
+
+  managerId Int
+  Manager   User @relation(fields: [managerId], references: [id])
+
+  businessId Int
+  Business   Business @relation(fields: [businessId], references: [id])
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+}
+
+//lead //need to add marketing source in future.
+model Student {
+  id Int @id @default(autoincrement())
+
+  studentNo String @unique
+
+  firstName String
+  email     String
+  phoneNo   String
+
+  status String
+
+  businessId Int
+  Business   Business @relation(fields: [businessId], references: [id])
+
+  branchId Int?
+  Branch   Branch? @relation(fields: [branchId], references: [id])
+
+  isActive  Boolean @default(false)
+  isDeleted Boolean @default(false)
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  // FIX: added @default(now())
+  createdAt           DateTime             @default(now()) @db.Timestamptz()
+  updatedAt           DateTime             @updatedAt @db.Timestamptz()
+  deletedAt           DateTime?            @db.Timestamptz()
+  studentApplications StudentApplication[]
+}
+
+model PreferredCountries {
+  id Int @id @default(autoincrement())
+
+  userId      Int
+  countryName String
+
+  isActive Boolean @default(false)
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+}
+
+//one student can have many application.
+model StudentApplication {
+  id Int @id @default(autoincrement())
+
+  //prefix will be business-shortcode-branch-shortcode.
+  applicationId Int @unique // For tracking just like ticketing system
+
+  // Application admission related fields
+  applicationStatus           String
+  applicationIntake           String
+  applicationTargetUniversity String
+  applicationTutionFee        Float
+  tutionFeeCurrency           String
+
+  applicationSubmittedAt DateTime? @db.Timestamptz()
+
+  isAdmissionTeamAssigned Boolean @default(false)
+  isManagerAssigned       Boolean @default(false)
+
+  managerAssignedAt       DateTime? @db.Timestamptz()
+  admissionTeamAssignedAt DateTime? @db.Timestamptz()
+
+  isActive Boolean @default(true)
+
+  studentId Int
+  Student   Student @relation(fields: [studentId], references: [id])
+
+  businessId Int
+  Business   Business @relation(fields: [businessId], references: [id])
+
+  branchId Int?
+  Branch   Branch? @relation(fields: [branchId], references: [id])
+
+  managerId Int?
+  Manager   User? @relation("ApplicationManager", fields: [managerId], references: [id])
+
+  counselorId Int?
+  Counselor   User? @relation("Counselor", fields: [counselorId], references: [id])
+
+  admissionOfficerId Int?
+  AdmissionOfficer   User? @relation("AdmissionTeamOfficer", fields: [admissionOfficerId], references: [id])
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+
+  studentApplicationTeams StudentApplicationTeam[]
+
+  applicationDocuments      ApplicationDocument[]
+  studentApplicationRemarks StudentApplicationRemarks[]
+}
+
+//just to keep the track record of who was previously assigned and who is currently assigned.
+//the ids are tracked in above table of currently assinged officers.
+model StudentApplicationTeam {
+  id Int @id @default(autoincrement())
+
+  applicationId Int
+  Application   StudentApplication @relation(fields: [applicationId], references: [id])
+
+  designation String //branch manager or admission team officer // or counselors.
+  memberName  String
+
+  isActive Boolean @default(false)
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  //refers to assigned At.
+  // FIX: added @default(now()) and @db.Timestamptz() for consistency
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+}
+
+model ApplicationDocument {
+  id           Int    @id @default(autoincrement())
+  documentType String
+  quantity     Float  @default(1)
+
+  isActive Boolean @default(false)
+
+  // FIX: added missing relation to StudentApplication — previously this table
+  // had no way to know which application a document belonged to.
+  applicationId Int
+  Application   StudentApplication @relation(fields: [applicationId], references: [id])
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+
+  // FIX: added back-relation so media files can be linked to a document
+  applicationDocumentMedia ApplicationDocumentMedia[]
+}
+
+model ApplicationDocumentMedia {
+  id Int @id @default(autoincrement())
+
+  isActive         Boolean @default(false)
+  documentUrl      String
+  documentFileType String  @default("")
+
+  // FIX: added missing relation to ApplicationDocument — one document can have
+  // many media/files (e.g. multiple pages/scans of the same document)
+  documentId Int
+  Document   ApplicationDocument @relation(fields: [documentId], references: [id])
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+}
+
+model StudentApplicationRemarks {
+  id Int @id @default(autoincrement())
+
+  comment String?
+
+  // FIX: added missing relation to StudentApplication — previously remarks
+  // weren't linked to any application at all.
+  applicationId Int
+  Application   StudentApplication @relation(fields: [applicationId], references: [id])
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  // FIX: added @default(now()) and @db.Timestamptz() for consistency
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+}
+
+model University {
+  id Int @id @default(autoincrement())
+
+  isFromSystem   Boolean @default(false)
+  universityName String
+  country        String
+  link           String
+
+  businessId Int
+  Business   Business @relation(fields: [businessId], references: [id])
+
+  createdBy Int?
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+
+  universityRequirements UniversityRequirement[]
+  universityCourses      UniversityCourses[]
+  universityIntakeDates  UniversityIntakeDate[]
+}
+
+model UniversityRequirement {
+  id           Int        @id @default(autoincrement())
+  universityId Int
+  University   University @relation(fields: [universityId], references: [id])
+
+  title   String
+  details String
+
+  sortOrder Int @default(0)
+
+  isActive  Boolean @default(true)
+  isDeleted Boolean @default(false)
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+}
+
+model UniversityCourses {
+  id Int @id @default(autoincrement())
+
+  businessId Int
+  Business   Business @relation(fields: [businessId], references: [id])
+
+  universityId Int
+  University   University @relation(fields: [universityId], references: [id])
+
+  isActive           Boolean @default(false)
+  courseRequirements String?
+
+  courseTitle String
+  degreeLevel String
+  tutionFee   Float
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+}
+
+model UniversityIntakeDate {
+  id Int @id @default(autoincrement())
+
+  isActive Boolean @default(true)
+
+  date DateTime @db.Date
+
+  universityId Int
+  University   University @relation(fields: [universityId], references: [id])
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+}
+
+// model Sessions {
+//   id Int @id @default(autoincrement())
+
+//   userId Int
+//   User   User @relation(fields: [userId], references: [id])
+
+//   createdAt DateTime  @default(now()) @db.Timestamptz()
+//   updatedAt DateTime  @updatedAt @db.Timestamptz()
+//   deletedAt DateTime? @db.Timestamptz()
+// }
