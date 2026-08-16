@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma.client";
+import { prisma } from "../../prisma.client.js";
 
 export async function GetBranchesByBusinessIdIncludingUsers(businessId) {
   return prisma.branch.findMany({
@@ -37,8 +37,14 @@ export function UpdateBranch(branchId, payload) {
 export function DeleteBranch(branchId, payload) {
   return prisma.branch.update({
     where: {
-      id,
+      id: branchId,
     },
     data: payload,
   });
+}
+
+// TODO: once transactional repository support is added, CreateBranch + CreateBranchManager
+// should run inside a single prisma.$transaction so a failure in one rolls back the other.
+export async function CreateBranchManager(data) {
+  return prisma.branchManager.create({ data });
 }

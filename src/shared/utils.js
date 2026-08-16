@@ -24,3 +24,7 @@ export function verifyToken(token) {
   }
 }
 
+export function generateBranchCode(businessName) {
+  const randomNumber = Math.floor(1000 + Math.random() * 9000);
+  return `${businessName.replace(/\s+/g, "").toUpperCase()}-${randomNumber}`;
+}

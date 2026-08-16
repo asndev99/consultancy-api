@@ -1,0 +1,23 @@
+# Folder Structure & Architecture Rules
+
+## Architecture Pattern
+- Follow the Clean/Layered Architecture pattern inside `src/`.
+- Routes MUST stay inside `src/presentation/routes/`.
+- Controllers/Handlers MUST stay inside `src/presentation/controllers/`.
+- Database models & schemas MUST stay inside `prisma/`.
+
+## File Naming Conventions
+- Route files: `*.route.js` (e.g., `branch.route.js`)
+- Controller files: `*.controller.js`
+- Service files: `*.service.js`
+
+## Database & Migration Safeguards
+- Do NOT change, add, or delete any database schema fields or Prisma models without explicit user consent.
+- Do NOT run database migrations or schema sync commands (e.g., `prisma migrate`, `prisma db push`) without explicit approval.
+
+## Workflow & Communication
+- Ask clarifying questions first if any prompt, requirement, or instruction is ambiguous or unclear before proceeding with code changes.
+
+## Enforcement Guidelines
+- Do NOT place route logic or business logic directly inside root directory files.
+- When creating new features, always maintain the existing layer hierarchy under `src/`.

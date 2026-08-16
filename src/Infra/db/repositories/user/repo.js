@@ -1,4 +1,7 @@
-import { UserStatus } from "../../../../shared/application.constants.js";
+import {
+  UserRoles,
+  UserStatus,
+} from "../../../../shared/application.constants.js";
 import { prisma } from "../../prisma.client.js";
 
 export async function findActiveUserByEmailAndBusinessId(email, businesId) {
@@ -25,4 +28,13 @@ export async function findUserByEmail(email, businesId) {
 
 export async function createUser(data) {
   return prisma.user.create({ data });
+}
+
+export async function GetManagersByBusiness(businessId) {
+  return prisma.user.findMany({
+    where: {
+      status: UserStatus.Active,
+      role: UserRoles.Manager,
+    },
+  });
 }

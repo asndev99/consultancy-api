@@ -57,14 +57,12 @@ model Branch {
   longitude Float?
 
   isActive  Boolean @default(false)
-  // FIX: was @default(true) — a new branch should not start soft-deleted. Changed to false.
   isDeleted Boolean @default(false)
 
   createdBy Int
   updatedBy Int?
   deletedBy Int?
 
-  // FIX: added @default(now())
   createdAt           DateTime             @default(now()) @db.Timestamptz()
   updatedAt           DateTime             @updatedAt @db.Timestamptz()
   deletedAt           DateTime?            @db.Timestamptz()

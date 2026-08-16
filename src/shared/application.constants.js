@@ -1,6 +1,7 @@
 export const UserRoles = {
   "Business Admin": "Business Admin",
   "Super Admin": "Super Admin",
+  Manager: "Manager",
   Counselor: "Counselor",
   "Admission Team": "Admission Team",
   "Sub Agent": "Sub Agent",

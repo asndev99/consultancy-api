@@ -3,13 +3,15 @@ import {
   GetBranchesByBusinessIdIncludingUsers,
   DeleteBranch,
   UpdateBranch,
-} from "./repo";
+  CreateBranchManager,
+} from "./repo.js";
 
 const BranchRawRepository = {
   GetBranchesByBusinessIdIncludingUsers,
   CreateBranch,
   DeleteBranch,
   UpdateBranch,
+  CreateBranchManager,
 };
 
 const BranchRepository = new Proxy(BranchRawRepository, {
@@ -30,4 +32,4 @@ const BranchRepository = new Proxy(BranchRawRepository, {
   },
 });
 
-export default BranchRepository
+export default BranchRepository;
