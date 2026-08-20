@@ -1,19 +1,29 @@
 import {
   createUniversity,
   findUniversityById,
+  findUniversityDetailsById,
   softDelete,
   update,
   createUniversityCourse,
   createUniversityRequirement,
+  updateUniversityRequirement,
+  softDeleteUniversityRequirement,
+  CountUniversitiesByBusinessId,
+  findUniversitiesByBusinessId
 } from "./repo.js";
 
 const UniversityRepositoryRaw = {
   createUniversity,
   createUniversityCourse,
   findUniversityById,
+  findUniversityDetailsById,
   update,
   softDelete,
   createUniversityRequirement,
+  updateUniversityRequirement,
+  softDeleteUniversityRequirement,
+  CountUniversitiesByBusinessId,
+  findUniversitiesByBusinessId
 };
 
 const UniversityRepository = new Proxy(UniversityRepositoryRaw, {

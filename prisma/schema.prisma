@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
@@ -345,13 +345,15 @@ model University {
   updatedBy Int?
   deletedBy Int?
 
+  isDeleted Boolean @default(false)
+  isActive  Boolean @default(false)
+
   createdAt DateTime  @default(now()) @db.Timestamptz()
   updatedAt DateTime  @updatedAt @db.Timestamptz()
   deletedAt DateTime? @db.Timestamptz()
 
   universityRequirements UniversityRequirement[]
   universityCourses      UniversityCourses[]
-  universityIntakeDates  UniversityIntakeDate[]
 }
 
 model UniversityRequirement {
@@ -395,9 +397,10 @@ model UniversityCourses {
   updatedBy Int?
   deletedBy Int?
 
-  createdAt DateTime  @default(now()) @db.Timestamptz()
-  updatedAt DateTime  @updatedAt @db.Timestamptz()
-  deletedAt DateTime? @db.Timestamptz()
+  createdAt             DateTime               @default(now()) @db.Timestamptz()
+  updatedAt             DateTime               @updatedAt @db.Timestamptz()
+  deletedAt             DateTime?              @db.Timestamptz()
+  universityIntakeDates UniversityIntakeDate[]
 }
 
 model UniversityIntakeDate {
@@ -407,16 +410,17 @@ model UniversityIntakeDate {
 
   date DateTime @db.Date
 
-  universityId Int
-  University   University @relation(fields: [universityId], references: [id])
+  courseId Int
+  Course   UniversityCourses @relation(fields: [courseId], references: [id])
 
   createdBy Int
   updatedBy Int?
   deletedBy Int?
 
-  createdAt DateTime  @default(now()) @db.Timestamptz()
-  updatedAt DateTime  @updatedAt @db.Timestamptz()
-  deletedAt DateTime? @db.Timestamptz()
+  createdAt    DateTime  @default(now()) @db.Timestamptz()
+  updatedAt    DateTime  @updatedAt @db.Timestamptz()
+  deletedAt    DateTime? @db.Timestamptz()
+  universityId Int?
 }
 
 // model Sessions {
