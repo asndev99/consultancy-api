@@ -13,7 +13,7 @@ export const CreateBranchUseCase = async (req, payload) => {
 
   await BranchRepository.CreateBranchManager({
     branchId: branch.id,
-    managerId: userId,
+    userId,
     businessId: branch.businessId,
     createdBy: req.user.id,
   });

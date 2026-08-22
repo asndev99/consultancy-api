@@ -17,3 +17,34 @@ export const createUser = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteUser = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.DeleteUserByBusinessUseCase(
+      req.user.id,
+      req.body.userId,
+      req.user.businessId || null,
+    );
+    res
+      .status(200)
+      .json({ code: 0, data, message: "User deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUser = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.UpdateUserUseCase(
+      req.user.id,
+      +req.params.id,
+      req.user.businessId,
+      req.body,
+    );
+    res
+      .status(200)
+      .json({ code: 0, data, message: "User deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};

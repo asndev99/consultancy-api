@@ -47,7 +47,7 @@ export const RegisterUserUseCase = async (userId, payload) => {
     };
   }
 
-  return UserRepository.createUser({
+  const user = UserRepository.createUser({
     ...payload,
     userNo: generateEmployeeCode(business.name, businessUserCount + 1),
     businessId: payload.businessId,
@@ -56,4 +56,11 @@ export const RegisterUserUseCase = async (userId, payload) => {
     inviteSentAt: new Date(),
     ...additionalDetails,
   });
+  await UserRepository.addUserToBranch({
+    userId: user.id,
+    branchId: payload.branchId,
+    businessId: payload.businessId,
+    createdBy: userId,
+  });
+  return user;
 };

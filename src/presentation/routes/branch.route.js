@@ -2,6 +2,8 @@ import express from "express";
 import { authMiddleware } from "../../middleware/auth.middleware.js";
 import { verifyRole } from "../../middleware/verify.role.middleware.js";
 import { UserRoles } from "../../shared/application.constants.js";
+import { validateBody } from "../../middleware/validate.payload.middleware.js";
+import branchSchemas from "../schema/branch/index.js";
 import {
   getBranchesByBusiness,
   createBranch,
@@ -27,6 +29,7 @@ branchRouter.post(
   "/",
   authMiddleware,
   verifyRole(manageBranchRoles),
+  validateBody(branchSchemas.CreateBranchSchema),
   createBranch,
 );
 
@@ -34,6 +37,7 @@ branchRouter.patch(
   "/:branchId",
   authMiddleware,
   verifyRole(manageBranchRoles),
+  validateBody(branchSchemas.UpdateBranchSchema),
   updateBranch,
 );
 

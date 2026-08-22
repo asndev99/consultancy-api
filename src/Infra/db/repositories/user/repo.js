@@ -99,3 +99,30 @@ export async function GetManagersByBusiness(businessId) {
     },
   });
 }
+
+export async function DeleteUserByBusiness(updatedBy, userId, businessId) {
+  const user = await findUserById(userId);
+
+  return prisma.user.update({
+    where: {
+      id: user.id,
+      // Super Admins have no businessId, so they aren't scoped to one business.
+      ...(businessId != null ? { businessId } : {}),
+    },
+    data: {
+      isDeleted: true,
+      deletedAt: new Date(),
+      deletedBy: updatedBy,
+      email: `del_${new Date().getTime()}_${user.email}`,
+      backUpEmailAddress: user.email,
+    },
+  });
+}
+
+export async function findUserById(id) {
+  return prisma.user.findUnique({ where: { id } });
+}
+
+export async function updateUserById(id, data) {
+  return prisma.user.update({ where: { id }, data });
+}

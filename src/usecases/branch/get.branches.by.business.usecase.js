@@ -1,8 +1,9 @@
 import BranchRepository from "../../Infra/db/repositories/branch/index.js";
 
 export const GetBranchesByBusinessUseCase = async (businessId) => {
-  const data =
-    await BranchRepository.GetBranchesByBusinessIdIncludingUsers(businessId);
+  const data = await BranchRepository.GetBranchesByBusinessIdIncludingUsers(
+    Number(businessId),
+  );
 
   if (!data) {
     return [];

@@ -1,6 +1,6 @@
 import express from "express";
 import { authMiddleware } from "../../middleware/auth.middleware.js";
-import { createUser, login } from "../controllers/user.controller.js";
+import { createUser, deleteUser, login, updateUser } from "../controllers/user.controller.js";
 import { verifyRole } from "../../middleware/verify.role.middleware.js";
 import { UserRoles } from "../../shared/application.constants.js";
 import { validateBody } from "../../middleware/validate.payload.middleware.js";
@@ -17,5 +17,22 @@ userRouter.post(
   validateBody(userSchemas.RegisterUserSchema),
   createUser,
 );
+
+userRouter.patch(
+  "/delete",
+  authMiddleware,
+  verifyRole([UserRoles["Business Admin"], UserRoles["Super Admin"]]),
+  validateBody(userSchemas.DeleteUserSchema),
+  deleteUser,
+);
+
+userRouter.patch(
+  "/update/:id",
+  authMiddleware,
+  verifyRole([UserRoles["Business Admin"], UserRoles["Super Admin"]]),
+  validateBody(userSchemas.UpdateUserSchema),
+  updateUser,
+);
+
 
 export default userRouter;
