@@ -1,6 +1,28 @@
 import { UserRoles } from "../../../shared/application.constants.js";
 
 export default {
+  LoginUserSchema: {
+    $id: "https://example.com/schemas/login-user.json",
+    type: "object",
+    properties: {
+      email: {
+        type: "string",
+        format: "email",
+        errorMessage: {
+          format: "Email must be a valid email address",
+        },
+      },
+      password: {
+        type: "string",
+        minLength: 1,
+        errorMessage: {
+          minLength: "Password is required",
+        },
+      },
+    },
+    required: ["email", "password"],
+    additionalProperties: false,
+  },
   RegisterUserSchema: {
     $id: "https://example.com/schemas/register-user.json",
     type: "object",

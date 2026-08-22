@@ -13,7 +13,7 @@ import userSchemas from "../schema/user/index.js";
 
 const userRouter = express.Router();
 
-userRouter.post("/login", login);
+userRouter.post("/login", validateBody(userSchemas.LoginUserSchema), login);
 
 userRouter.post(
   "/register",
