@@ -8,6 +8,7 @@ import {
   DeleteUserByBusiness,
   findUserById,
   updateUserById,
+  FindAssignedBranchesToUserByUserId,
 } from "./repo.js";
 
 const UserRepositoryRaw = {
@@ -20,6 +21,7 @@ const UserRepositoryRaw = {
   DeleteUserByBusiness,
   findUserById,
   updateUserById,
+  FindAssignedBranchesToUserByUserId
 };
 
 const UserRepository = new Proxy(UserRepositoryRaw, {

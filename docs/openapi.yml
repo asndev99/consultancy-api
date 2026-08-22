@@ -161,6 +161,53 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: User not found
+  /business/list-managers/{businessId}:
+    get:
+      tags:
+        - Business
+      summary: Get active managers for a business
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Managers fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 1
+                  message:
+                    type: string
+                    example: Managers fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                        role:
+                          type: string
+                        status:
+                          type: string
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
   /business/users/{businessId}:
     get:
       tags:
@@ -172,6 +219,12 @@ paths:
         - name: businessId
           in: path
           required: true
+          schema:
+            type: integer
+        - name: branchId
+          in: query
+          required: false
+          description: When provided, only returns users assigned to this branch
           schema:
             type: integer
       responses:
@@ -309,21 +362,16 @@ paths:
               type: object
               required:
                 - name
-                - branchCode
                 - businessId
                 - city
                 - country
                 - address
-                - userId
+                # - userId
               properties:
                 name:
                   type: string
                   minLength: 2
                   maxLength: 150
-                branchCode:
-                  type: string
-                  minLength: 2
-                  maxLength: 50
                 businessId:
                   type: integer
                 city:

@@ -8,11 +8,6 @@ export default {
         minLength: 2,
         maxLength: 150,
       },
-      branchCode: {
-        type: "string",
-        minLength: 2,
-        maxLength: 50,
-      },
       businessId: {
         type: "integer",
         minimum: 1,
@@ -48,12 +43,11 @@ export default {
     },
     required: [
       "name",
-      "branchCode",
       "businessId",
       "city",
       "country",
       "address",
-      "userId",
+      // "userId",
     ],
     additionalProperties: false,
   },

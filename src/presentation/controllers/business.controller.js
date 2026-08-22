@@ -16,8 +16,10 @@ export const registerBusiness = async (req, res, next) => {
 
 export const getBranchManagersByBusiness = async (req, res, next) => {
   try {
-    const data = BusinessUseCases.GetBusinessManagersUseCase(req.params.id);
-    return data;
+    const data = await BusinessUseCases.GetBusinessManagersUseCase(
+      req.params.businessId,
+    );
+    res.status(200).json({ code: 1, data, message: "Managers fetched" });
   } catch (error) {
     next(error);
   }
@@ -26,7 +28,9 @@ export const getBranchManagersByBusiness = async (req, res, next) => {
 export const getUsersByBusiness = async (req, res, next) => {
   try {
     const data = await BusinessUseCases.GetUsersByBusinessUseCase(
+      req.user.role,
       req.params.businessId,
+      req.user.assignedBranches,
     );
     res.status(200).json({ code: 1, data, message: "Users fetched" });
   } catch (error) {

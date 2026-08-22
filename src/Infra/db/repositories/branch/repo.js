@@ -4,14 +4,16 @@ export async function GetBranchesByBusinessIdIncludingUsers(businessId) {
   return prisma.branch.findMany({
     where: {
       businessId,
-      isActive: true,
       isDeleted: false,
     },
     include: {
-      users: {
-        where: {
-          isActive: true,
-          isDeleted: false,
+      branchUsers: {
+        include: {
+          User: {
+            where: {
+              isDeleted: false,
+            },
+          },
         },
       },
     },
@@ -21,6 +23,14 @@ export async function GetBranchesByBusinessIdIncludingUsers(businessId) {
 export async function CreateBranch(payload) {
   return prisma.branch.create({
     data: payload,
+  });
+}
+
+export async function FindByBranchName(name) {
+  return prisma.branch.findUnique({
+    where: {
+      name,
+    },
   });
 }
 

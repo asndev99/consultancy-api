@@ -27,12 +27,17 @@ export const LoginUserUseCase = async (payload) => {
     throw new BadRequestException("Invalid email or password");
   }
 
+  const assignedBranches =
+    await UserRepository.FindAssignedBranchesToUserByUserId(user.id);
+
   const tokenPayload = {
     id: user.id,
     email: user.email,
     role: user.role,
     businessId: user.businessId,
-    branchId: user.branchId,
+    assignedBranches: assignedBranches
+      .map((item) => item.Branch)
+      .filter((br) => !br.isDeleted),
   };
 
   const accessToken = generateToken(tokenPayload);

@@ -21,12 +21,14 @@ export const RegisterUserUseCase = async (userId, payload) => {
       throw new BadRequestException("This User Already Exists On This Branch");
     }
 
-    return UserRepository.addUserToBranch({
+    await UserRepository.addUserToBranch({
       userId: existingUser.id,
       branchId: payload.branchId,
       businessId: payload.businessId,
       createdBy: userId,
     });
+
+    return existingUser;
   }
 
   //need to send inviation link.
@@ -47,7 +49,7 @@ export const RegisterUserUseCase = async (userId, payload) => {
     };
   }
 
-  const user = UserRepository.createUser({
+  const user = await UserRepository.createUser({
     ...payload,
     userNo: generateEmployeeCode(business.name, businessUserCount + 1),
     businessId: payload.businessId,

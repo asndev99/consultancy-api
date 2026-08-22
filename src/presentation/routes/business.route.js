@@ -27,7 +27,11 @@ businessRouter.get(
 businessRouter.get(
   "/users/:businessId",
   authMiddleware,
-  verifyRole([UserRoles["Super Admin"], UserRoles["Business Admin"]]),
+  verifyRole([
+    UserRoles["Super Admin"],
+    UserRoles["Business Admin"],
+    UserRoles["Manager"],
+  ]),
   getUsersByBusiness,
 );
 

@@ -22,6 +22,17 @@ export async function findUserByEmail(email) {
   });
 }
 
+export async function FindAssignedBranchesToUserByUserId(userId) {
+  return prisma.userBranch.findMany({
+    where: {
+      userId,
+    },
+    include: {
+      Branch: true,
+    },
+  });
+}
+
 export async function findUserByEmailAndBusinessIncludingBranches(
   email,
   businessId,
@@ -81,6 +92,33 @@ export async function getUsersByBusinessId(businessId) {
       inviteAcceptedAt: true,
       createdAt: true,
       updatedAt: true,
+      role: true,
+      userBranches: {
+        where: { deletedAt: null },
+        select: {
+          Branch: true,
+        },
+      },
+    },
+  });
+}
+
+export function getUsersByBusinessIdAndBranchId(businessId, branchId) {
+  return prisma.user.findMany({
+    where: {
+      businessId,
+      isDeleted: false,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      previousEmailAddress: true,
+      status: true,
+      inviteAcceptedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      role: true,
       userBranches: {
         where: { deletedAt: null },
         select: {
@@ -94,8 +132,11 @@ export async function getUsersByBusinessId(businessId) {
 export async function GetManagersByBusiness(businessId) {
   return prisma.user.findMany({
     where: {
+      isActive: true,
+      businessId: Number(businessId),
       status: UserStatus.Active,
       role: UserRoles.Manager,
+      isDeleted: false,
     },
   });
 }

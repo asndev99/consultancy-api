@@ -4,6 +4,7 @@ import {
   DeleteBranch,
   UpdateBranch,
   CreateBranchManager,
+  FindByBranchName
 } from "./repo.js";
 
 const BranchRawRepository = {
@@ -12,6 +13,7 @@ const BranchRawRepository = {
   DeleteBranch,
   UpdateBranch,
   CreateBranchManager,
+  FindByBranchName
 };
 
 const BranchRepository = new Proxy(BranchRawRepository, {
