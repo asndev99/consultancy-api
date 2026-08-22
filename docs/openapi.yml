@@ -1,0 +1,161 @@
+openapi: 3.0.3
+info:
+  title: Consultancy API
+  version: 1.0.0
+paths:
+  /user/login:
+    post:
+      tags:
+        - Users
+      summary: Log in a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        "200":
+          description: Login successful
+        "401":
+          description: Invalid email or password
+  /user/register:
+    post:
+      tags:
+        - Users
+      summary: Register a new user for a business/branch
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - phoneNumber
+                - role
+                - businessId
+                - branchId
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                email:
+                  type: string
+                  format: email
+                phoneNumber:
+                  type: string
+                  minLength: 2
+                role:
+                  type: string
+                  enum:
+                    - Manager
+                    - Counselor
+                    - Admission Team
+                    - Sub Agent
+                businessId:
+                  type: integer
+                branchId:
+                  type: integer
+      responses:
+        "201":
+          description: Invitation sent
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+  /business/users/{businessId}:
+    get:
+      tags:
+        - Business
+      summary: Get users belonging to a business, including their branches
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Users fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 1
+                  message:
+                    type: string
+                    example: Users fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+                        previousEmailAddress:
+                          type: string
+                          nullable: true
+                        status:
+                          type: string
+                        inviteAcceptedAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                        branches:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              name:
+                                type: string
+                              branchCode:
+                                type: string
+                              city:
+                                type: string
+                              country:
+                                type: string
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

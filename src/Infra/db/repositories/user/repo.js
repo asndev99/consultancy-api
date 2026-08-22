@@ -4,30 +4,91 @@ import {
 } from "../../../../shared/application.constants.js";
 import { prisma } from "../../prisma.client.js";
 
-export async function findActiveUserByEmailAndBusinessId(email, businesId) {
+//need to update this once subdomain work is done.
+export async function findUserByEmail(email) {
+  return prisma.user.findFirst({
+    where: {
+      email,
+      status: UserStatus.Active,
+      isDeleted: false,
+    },
+    include: {
+      Business: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+}
+
+export async function findUserByEmailAndBusinessIncludingBranches(
+  email,
+  businessId,
+) {
   return prisma.user.findUnique({
     where: {
       businessId_email: {
         businessId,
         email,
       },
-      status: UserStatus.Active,
+      isDeleted: false,
+      deletedAt: null,
+    },
+    include: {
+      userBranches: true,
     },
   });
 }
 
-export async function findUserByEmail(email, businesId) {
-  return prisma.user.findUnique({
-    where: {
-      email,
-      status: UserStatus.Active,
-      isDeleted: false,
+export async function countUsersByBusiness(businessId) {
+  return prisma.user.count({ where: { businessId } });
+}
+
+export async function addUserToBranch({
+  userId,
+  branchId,
+  businessId,
+  createdBy,
+}) {
+  return prisma.userBranch.create({
+    data: {
+      userId: userId,
+      branchId,
+      businessId,
+      createdBy,
+      isActive: true,
     },
   });
 }
 
 export async function createUser(data) {
   return prisma.user.create({ data });
+}
+
+export async function getUsersByBusinessId(businessId) {
+  return prisma.user.findMany({
+    where: {
+      businessId,
+      isDeleted: false,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      previousEmailAddress: true,
+      status: true,
+      inviteAcceptedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      userBranches: {
+        where: { deletedAt: null },
+        select: {
+          Branch: true,
+        },
+      },
+    },
+  });
 }
 
 export async function GetManagersByBusiness(businessId) {

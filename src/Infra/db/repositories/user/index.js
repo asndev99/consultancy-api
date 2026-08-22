@@ -1,13 +1,20 @@
 import {
-  findActiveUserByEmailAndBusinessId,
   findUserByEmail,
   createUser,
+  findUserByEmailAndBusinessIncludingBranches,
+  countUsersByBusiness,
+  getUsersByBusinessId,
+  addUserToBranch
+
 } from "./repo.js";
 
 const UserRepositoryRaw = {
-  findActiveUserByEmailAndBusinessId,
   findUserByEmail,
   createUser,
+  findUserByEmailAndBusinessIncludingBranches,
+  countUsersByBusiness,
+  getUsersByBusinessId,
+  addUserToBranch
 };
 
 const UserRepository = new Proxy(UserRepositoryRaw, {

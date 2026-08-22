@@ -5,6 +5,7 @@ import { UserRoles } from "../../shared/application.constants.js";
 import {
   getBranchManagersByBusiness,
   registerBusiness,
+  getUsersByBusiness,
 } from "../controllers/business.controller.js";
 
 const businessRouter = express.Router();
@@ -19,8 +20,15 @@ businessRouter.post(
 businessRouter.get(
   "/list-managers/:businessId",
   authMiddleware,
-  verifyRole([UserRoles[("Super Admin", UserRoles["Business Admin"])]]),
+  verifyRole([UserRoles["Super Admin"], UserRoles["Business Admin"]]),
   getBranchManagersByBusiness,
+);
+
+businessRouter.get(
+  "/users/:businessId",
+  authMiddleware,
+  verifyRole([UserRoles["Super Admin"], UserRoles["Business Admin"]]),
+  getUsersByBusiness,
 );
 
 export default businessRouter;

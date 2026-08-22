@@ -33,7 +33,7 @@ model Business {
   studentApplications StudentApplication[]
   universities        University[]
   universityCourses   UniversityCourses[]
-  branchManagers      BranchManager[]
+  UserBranches        UserBranch[]
   students            Student[]
   branches            Branch[]
 }
@@ -66,7 +66,7 @@ model Branch {
   createdAt           DateTime             @default(now()) @db.Timestamptz()
   updatedAt           DateTime             @updatedAt @db.Timestamptz()
   deletedAt           DateTime?            @db.Timestamptz()
-  branchManagers      BranchManager[]
+  branchManagers      UserBranch[]
   users               User[]
   studentApplications StudentApplication[]
   students            Student[]
@@ -75,17 +75,19 @@ model Branch {
 model User {
   id Int @id @default(autoincrement())
 
-  userNo String @unique
+  userNo String @unique //just as employee no.
 
   role         String //roles defined in shared/application.constants.js
   status       String //status defined in shared/application.constants.js
   inviteSentAt DateTime? @db.Timestamptz()
 
   // Personal details
-  name         String
-  email        String
-  password     String
-  profileMedia String?
+  name                 String
+  email                String
+  password             String?
+  phoneNumber          String?
+  profileMedia         String?
+  previousEmailAddress String? //in update form if we allow admin updating email address, so just to keep track.
 
   businessId Int? // Nullable for application admin
   Business   Business? @relation(fields: [businessId], references: [id])
@@ -103,11 +105,12 @@ model User {
   updatedBy Int?
   deletedBy Int?
 
-  createdAt DateTime  @default(now()) @db.Timestamptz()
-  updatedAt DateTime  @updatedAt @db.Timestamptz()
-  deletedAt DateTime? @db.Timestamptz()
+  inviteAcceptedAt DateTime? @db.Timestamptz()
+  createdAt        DateTime  @default(now()) @db.Timestamptz()
+  updatedAt        DateTime  @updatedAt @db.Timestamptz()
+  deletedAt        DateTime? @db.Timestamptz()
 
-  branchManagers BranchManager[]
+  userBranches UserBranch[]
 
   managedApplications StudentApplication[] @relation("ApplicationManager")
   officerApplications StudentApplication[] @relation("AdmissionTeamOfficer")
@@ -117,16 +120,19 @@ model User {
   @@unique([businessId, email])
 }
 
-//Because one branch can have many managers in future
-model BranchManager {
+//Because one branch can have many managers in future.
+//Because one counselor can be assigned to many branches.
+//for now a user with a particular role can exist at multiple branches 
+//but a user with different role cannot exists at multiple branches
+model UserBranch {
   id Int @id @default(autoincrement())
 
   isActive Boolean @default(false)
   branchId Int
   Branch   Branch  @relation(fields: [branchId], references: [id])
 
-  managerId Int
-  Manager   User @relation(fields: [managerId], references: [id])
+  userId Int
+  User   User @relation(fields: [userId], references: [id])
 
   businessId Int
   Business   Business @relation(fields: [businessId], references: [id])
@@ -138,6 +144,8 @@ model BranchManager {
   createdAt DateTime  @default(now()) @db.Timestamptz()
   updatedAt DateTime  @updatedAt @db.Timestamptz()
   deletedAt DateTime? @db.Timestamptz()
+
+  @@unique([userId, branchId])
 }
 
 //lead //need to add marketing source in future.

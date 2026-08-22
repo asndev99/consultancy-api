@@ -13,3 +13,11 @@ export const RegisterBusiness = (payload) => {
     data: payload,
   });
 };
+
+export const FindBusinessById = (businessId) => {
+  return prisma.business.findUnique({
+    where: {
+      id: Number(businessId),
+    },
+  });
+};
