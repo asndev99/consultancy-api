@@ -8,7 +8,6 @@ import { generateToken, generateRefreshToken } from "../../shared/utils.js";
 import { UserRoles } from "../../shared/application.constants.js";
 
 export const LoginUserUseCase = async (payload) => {
-  
   const { email, password } = payload;
 
   const user = await UserRepository.findUserByEmail(email);
@@ -48,6 +47,7 @@ export const LoginUserUseCase = async (payload) => {
     id: user.id,
     email: user.email,
     role: user.role,
+    name: user.name,
     businessId: user.businessId,
     assignedBranches,
   };
