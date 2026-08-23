@@ -26,3 +26,9 @@ export class UnauthorizedException extends HttpException {
     super(message, 401);
   }
 }
+
+export class ForBiddenException extends HttpException {
+  constructor(message = "Forbidden"){
+    super(message,403)
+  }
+}

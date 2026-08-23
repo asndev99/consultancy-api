@@ -20,12 +20,13 @@ const universityRouter = express.Router();
 const manageUniversityRoles = [
   UserRoles["Business Admin"],
   UserRoles["Super Admin"],
+  UserRoles["Manager"],
 ];
 
 universityRouter.post(
   "/add",
-  // authMiddleware,
-  // verifyRole(manageUniversityRoles),
+  authMiddleware,
+  verifyRole(manageUniversityRoles),
   validateBody(universitySchemas.AddUniversitySchema),
   addUniversityForBusiness,
 );

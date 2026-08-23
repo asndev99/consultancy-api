@@ -48,3 +48,6 @@ INSERT INTO "Branch" (
   now(),
   now()
 );
+
+
+"$2b$10$fqWpF8raVIkICZKeTLjpSeL8EDF9WZ/UZs67J48JddUrsZiSGBD/a"

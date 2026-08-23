@@ -4,6 +4,14 @@ export async function createUniversity(data) {
   return prisma.university.create({ data });
 }
 
+export async function findUniversityByBusinessId(businessId) {
+  return prisma.university.findFirst({
+    where: {
+      businessId,
+    },
+  });
+}
+
 export async function findUniversityById(id, { includeDeleted = false } = {}) {
   return prisma.university.findFirst({
     where: {
@@ -88,8 +96,9 @@ export async function createUniversityCourse(data) {
         ? {
             universityIntakeDates: {
               create: intakeDates.map((intakeDate) => ({
-                date: intakeDate.date ?? intakeDate,
+                date: intakeDate.date ?? new Date(intakeDate),
                 createdBy: intakeDate.createdBy ?? courseData.createdBy,
+                universityId: courseData.universityId,
               })),
             },
           }
@@ -124,14 +133,14 @@ export async function createUniversityRequirement(data) {
 
 export async function updateUniversityRequirement(id, data) {
   return prisma.universityRequirement.update({
-    where: { id },
+    where: { id: Number(id) },
     data,
   });
 }
 
 export async function softDeleteUniversityRequirement(id, deletedBy) {
   return prisma.universityRequirement.update({
-    where: { id },
+    where: { id: Number(id) },
     data: {
       isDeleted: true,
       deletedAt: new Date(),

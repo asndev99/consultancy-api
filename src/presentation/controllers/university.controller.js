@@ -2,11 +2,8 @@ import UniversityUseCases from "../../usecases/university/index.js";
 
 export const addUniversityForBusiness = async (req, res, next) => {
   try {
-    const data = await UniversityUseCases.AddUniversityUseCase(
-      req.user.id,
-      req.body,
-    );
-    res.status(201).json({ code: 1, data, message: "University created" });
+    const data = await UniversityUseCases.AddUniversityUseCase(req);
+    res.status(201).json({ code: 0, data, message: "University created" });
   } catch (error) {
     next(error);
   }
@@ -54,10 +51,7 @@ export const editUniversity = async (req, res, next) => {
 
 export const addUniversityCourse = async (req, res, next) => {
   try {
-    const data = await UniversityUseCases.AddUniversityCourseUseCase(
-      req.user.id,
-      req.body,
-    );
+    const data = await UniversityUseCases.AddUniversityCourseUseCase(req);
     res.status(201).json({ code: 1, data, message: "Course created" });
   } catch (error) {
     next(error);
@@ -66,10 +60,7 @@ export const addUniversityCourse = async (req, res, next) => {
 
 export const addUniversityRequirement = async (req, res, next) => {
   try {
-    const data = await UniversityUseCases.AddUniversityRequirementUseCase(
-      req.user.id,
-      req.body,
-    );
+    const data = await UniversityUseCases.AddUniversityRequirementUseCase(req);
     res.status(201).json({ code: 1, data, message: "Requirement created" });
   } catch (error) {
     next(error);
@@ -79,9 +70,7 @@ export const addUniversityRequirement = async (req, res, next) => {
 export const editUniversityRequirement = async (req, res, next) => {
   try {
     const data = await UniversityUseCases.EditUniversityRequirementUseCase(
-      req.user.id,
-      req.params.requirementId,
-      req.body,
+     req
     );
     res.status(200).json({ code: 1, data, message: "Requirement updated" });
   } catch (error) {
@@ -92,8 +81,7 @@ export const editUniversityRequirement = async (req, res, next) => {
 export const deleteUniversityRequirement = async (req, res, next) => {
   try {
     const data = await UniversityUseCases.DeleteUniversityRequirementUseCase(
-      req.user.id,
-      req.params.requirementId,
+      req
     );
     res.status(200).json({ code: 1, data, message: "Requirement deleted" });
   } catch (error) {

@@ -356,7 +356,7 @@ model University {
   deletedBy Int?
 
   isDeleted Boolean @default(false)
-  isActive  Boolean @default(false)
+  isActive  Boolean @default(true)
 
   createdAt DateTime  @default(now()) @db.Timestamptz()
   updatedAt DateTime  @updatedAt @db.Timestamptz()

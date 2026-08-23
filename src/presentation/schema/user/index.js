@@ -101,13 +101,13 @@ export default {
           minLength: "phoneNumber is required",
         },
       },
-      role: {
-        type: "string",
-        enum: Object.values(UserRoles),
-        errorMessage: {
-          enum: "Role must be one of the allowed roles",
-        },
-      },
+      // role: {
+      //   type: "string",
+      //   enum: Object.values(UserRoles),
+      //   errorMessage: {
+      //     enum: "Role must be one of the allowed roles",
+      //   },
+      // },
       businessId: {
         type: "integer",
         minimum: 1,

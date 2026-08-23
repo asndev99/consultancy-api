@@ -3,7 +3,7 @@ export default {
     $id: "https://example.com/schemas/add-university.json",
     type: "object",
     properties: {
-      name: {
+      universityName: {
         type: "string",
         minLength: 2,
         maxLength: 150,
@@ -16,16 +16,19 @@ export default {
         minLength: 2,
         maxLength: 90,
       },
-      type: {
-        type: "string",
-        enum: ["Public University", "Private University", "Other"],
+      businessId: {
+        type: "integer",
+        minimum: 1,
+        errorMessage: {
+          minimum: "businessId must be a positive integer",
+        },
       },
-      officialWebsite: {
+      link: {
         type: "string",
         format: "uri",
       },
     },
-    required: ["name", "country", "type", "officialWebsite"],
+    required: ["universityName", "country", "businessId", "link"],
     additionalProperties: false,
   },
 };
