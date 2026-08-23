@@ -1,0 +1,53 @@
+name: Deploy Consultancy API to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -e
+
+            if [ ! -d /home/ubuntu/projects/consultancy-api/.git ]; then
+              echo "==> Repo not found. Cloning..."
+              git clone github-consultancy-api:asndev99/consultancy-api.git /home/ubuntu/projects/consultancy-api
+            fi
+
+            cd /home/ubuntu/projects/consultancy-api
+
+            echo "==> Pulling latest main"
+            git pull origin main
+
+            echo "==> Installing deps"
+            corepack enable
+            corepack prepare pnpm@latest --activate
+            pnpm install
+
+            echo "==> Generating Prisma client"
+            npx prisma generate
+
+            echo "==> Starting or restarting PM2 process"
+            if pm2 describe consultancy-api > /dev/null 2>&1; then
+              echo "Process 'consultancy-api' found. Restarting..."
+              pm2 restart consultancy-api --update-env
+            else
+              echo "Process 'consultancy-api' not found. Starting new process..."
+              pm2 start src/app.js --name consultancy-api
+            fi
+
+            pm2 save
+
+            echo "==> Done"
+            pm2 status consultancy-api
