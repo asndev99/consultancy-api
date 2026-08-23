@@ -3,11 +3,13 @@ CREATE TABLE "Business" (
     "id" SERIAL NOT NULL,
     "businessCode" TEXT NOT NULL,
     "studentSequence" INTEGER NOT NULL DEFAULT 0,
+    "timeZone" TEXT NOT NULL DEFAULT 'Asia/Karachi',
     "name" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "address" TEXT NOT NULL,
     "businessLogo" TEXT NOT NULL,
+    "googleMapUrl" TEXT NOT NULL DEFAULT '',
     "createdBy" INTEGER NOT NULL,
     "updatedBy" INTEGER,
     "deletedBy" INTEGER,
@@ -22,7 +24,11 @@ CREATE TABLE "Business" (
 CREATE TABLE "Branch" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "branchCode" TEXT,
+    "branchCode" TEXT NOT NULL,
+    "timeZone" TEXT NOT NULL DEFAULT 'Asia/Karachi',
+    "businessId" INTEGER NOT NULL,
+    "city" TEXT NOT NULL,
+    "country" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "latitude" DOUBLE PRECISION,
     "longitude" DOUBLE PRECISION,
@@ -43,18 +49,24 @@ CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "userNo" TEXT NOT NULL,
     "role" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "inviteSentAt" TIMESTAMPTZ,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "password" TEXT,
+    "phoneNumber" TEXT,
     "profileMedia" TEXT,
+    "previousEmailAddress" TEXT,
     "businessId" INTEGER,
     "branchId" INTEGER,
     "backUpEmailAddress" TEXT,
+    "isEmailVerified" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdBy" INTEGER NOT NULL,
     "updatedBy" INTEGER,
     "deletedBy" INTEGER,
+    "inviteAcceptedAt" TIMESTAMPTZ,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ NOT NULL,
     "deletedAt" TIMESTAMPTZ,
@@ -63,11 +75,11 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "BranchManager" (
+CREATE TABLE "UserBranch" (
     "id" SERIAL NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT false,
     "branchId" INTEGER NOT NULL,
-    "managerId" INTEGER NOT NULL,
+    "userId" INTEGER NOT NULL,
     "businessId" INTEGER NOT NULL,
     "createdBy" INTEGER NOT NULL,
     "updatedBy" INTEGER,
@@ -76,7 +88,7 @@ CREATE TABLE "BranchManager" (
     "updatedAt" TIMESTAMPTZ NOT NULL,
     "deletedAt" TIMESTAMPTZ,
 
-    CONSTRAINT "BranchManager_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "UserBranch_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -222,6 +234,8 @@ CREATE TABLE "University" (
     "createdBy" INTEGER,
     "updatedBy" INTEGER,
     "deletedBy" INTEGER,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ NOT NULL,
     "deletedAt" TIMESTAMPTZ,
@@ -273,13 +287,14 @@ CREATE TABLE "UniversityIntakeDate" (
     "id" SERIAL NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "date" DATE NOT NULL,
-    "universityId" INTEGER NOT NULL,
+    "courseId" INTEGER NOT NULL,
     "createdBy" INTEGER NOT NULL,
     "updatedBy" INTEGER,
     "deletedBy" INTEGER,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMPTZ NOT NULL,
     "deletedAt" TIMESTAMPTZ,
+    "universityId" INTEGER,
 
     CONSTRAINT "UniversityIntakeDate_pkey" PRIMARY KEY ("id")
 );
@@ -300,7 +315,10 @@ CREATE UNIQUE INDEX "Branch_branchCode_key" ON "Branch"("branchCode");
 CREATE UNIQUE INDEX "User_userNo_key" ON "User"("userNo");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_businessId_branchId_email_key" ON "User"("businessId", "branchId", "email");
+CREATE UNIQUE INDEX "User_businessId_email_key" ON "User"("businessId", "email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "UserBranch_userId_branchId_key" ON "UserBranch"("userId", "branchId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Student_studentNo_key" ON "Student"("studentNo");
@@ -309,19 +327,22 @@ CREATE UNIQUE INDEX "Student_studentNo_key" ON "Student"("studentNo");
 CREATE UNIQUE INDEX "StudentApplication_applicationId_key" ON "StudentApplication"("applicationId");
 
 -- AddForeignKey
+ALTER TABLE "Branch" ADD CONSTRAINT "Branch_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BranchManager" ADD CONSTRAINT "BranchManager_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserBranch" ADD CONSTRAINT "UserBranch_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BranchManager" ADD CONSTRAINT "BranchManager_managerId_fkey" FOREIGN KEY ("managerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserBranch" ADD CONSTRAINT "UserBranch_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BranchManager" ADD CONSTRAINT "BranchManager_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UserBranch" ADD CONSTRAINT "UserBranch_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Student" ADD CONSTRAINT "Student_businessId_fkey" FOREIGN KEY ("businessId") REFERENCES "Business"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -372,4 +393,4 @@ ALTER TABLE "UniversityCourses" ADD CONSTRAINT "UniversityCourses_businessId_fke
 ALTER TABLE "UniversityCourses" ADD CONSTRAINT "UniversityCourses_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "University"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UniversityIntakeDate" ADD CONSTRAINT "UniversityIntakeDate_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "University"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "UniversityIntakeDate" ADD CONSTRAINT "UniversityIntakeDate_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "UniversityCourses"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
