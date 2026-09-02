@@ -18,12 +18,7 @@ const manageBranchRoles = [
   UserRoles["Super Admin"],
 ];
 
-branchRouter.get(
-  "/:businessId",
-  authMiddleware,
-  verifyRole([UserRoles["Super Admin"]]),
-  getBranchesByBusiness,
-);
+branchRouter.get("/", authMiddleware, getBranchesByBusiness);
 
 branchRouter.post(
   "/",

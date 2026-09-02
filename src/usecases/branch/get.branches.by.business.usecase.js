@@ -1,28 +1,19 @@
 import BranchRepository from "../../Infra/db/repositories/branch/index.js";
 import { UserRoles } from "../../shared/application.constants.js";
 
-export const GetBranchesByBusinessUseCase = async (businessId) => {
-  const data = await BranchRepository.GetBranchesByBusinessIdIncludingUsers(
-    Number(businessId),
-  );
+export const GetBranchesByBusinessUseCase = async (
+  businessId,
+  userId,
+  role,
+) => {
+  const parsedBusinessId = Number(businessId);
 
-  if (!data) {
-    return [];
+  if (role === UserRoles["Business Admin"]) {
+    return BranchRepository.FindBranchesByBusinessId(parsedBusinessId);
   }
 
-  return data.map((item) => {
-    const { branchUsers, ...rest } = item;
-
-    const members = (branchUsers ?? []).map((bu) => bu.User);
-
-    const managers = members.filter(
-      (user) => user.role === UserRoles["Manager"],
-    );
-
-    return {
-      ...rest,
-      totalMembers: members.length,
-      managers,
-    };
-  });
+  return BranchRepository.FindBranchesByUserId(
+    Number(userId),
+    parsedBusinessId,
+  );
 };

@@ -6,6 +6,7 @@ import {
 } from "../../shared/error.js";
 import { generateToken, generateRefreshToken } from "../../shared/utils.js";
 import { UserRoles } from "../../shared/application.constants.js";
+import BranchRepository from "../../Infra/db/repositories/branch/index.js";
 
 export const LoginUserUseCase = async (payload) => {
   const { email, password } = payload;
@@ -41,6 +42,10 @@ export const LoginUserUseCase = async (payload) => {
     assignedBranches = userBranches
       .map((item) => item.Branch)
       .filter((branch) => branch && !branch.isDeleted);
+  } else {
+    assignedBranches = await BranchRepository.FindBranchesByBusinessId(
+      user.businessId,
+    );
   }
 
   const tokenPayload = {

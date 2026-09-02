@@ -3,6 +3,7 @@ import {
   createUser,
   findUserByEmailAndBusinessIncludingBranches,
   countUsersByBusiness,
+  countBusinessUsers,
   getUsersByBusinessId,
   addUserToBranch,
   DeleteUserByBusiness,
@@ -16,12 +17,13 @@ const UserRepositoryRaw = {
   createUser,
   findUserByEmailAndBusinessIncludingBranches,
   countUsersByBusiness,
+  countBusinessUsers,
   getUsersByBusinessId,
   addUserToBranch,
   DeleteUserByBusiness,
   findUserById,
   updateUserById,
-  FindAssignedBranchesToUserByUserId
+  FindAssignedBranchesToUserByUserId,
 };
 
 const UserRepository = new Proxy(UserRepositoryRaw, {

@@ -1,19 +1,26 @@
 import { prisma } from "../../prisma.client.js";
 
-export async function GetBranchesByBusinessIdIncludingUsers(businessId) {
+export async function FindBranchesByBusinessId(businessId) {
   return prisma.branch.findMany({
     where: {
       businessId,
+      isActive: true,
       isDeleted: false,
     },
-    include: {
+  });
+}
+
+export async function FindBranchesByUserId(userId, businessId) {
+  return prisma.branch.findMany({
+    where: {
+      businessId,
+      isActive: true,
+      isDeleted: false,
       branchUsers: {
-        include: {
-          User: {
-            where: {
-              isDeleted: false,
-            },
-          },
+        some: {
+          userId,
+          isActive: true,
+          deletedAt: null,
         },
       },
     },

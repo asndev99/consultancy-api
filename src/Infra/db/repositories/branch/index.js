@@ -1,19 +1,21 @@
 import {
   CreateBranch,
-  GetBranchesByBusinessIdIncludingUsers,
   DeleteBranch,
   UpdateBranch,
   CreateBranchManager,
-  FindByBranchName
+  FindByBranchName,
+  FindBranchesByBusinessId,
+  FindBranchesByUserId,
 } from "./repo.js";
 
 const BranchRawRepository = {
-  GetBranchesByBusinessIdIncludingUsers,
   CreateBranch,
   DeleteBranch,
   UpdateBranch,
   CreateBranchManager,
-  FindByBranchName
+  FindByBranchName,
+  FindBranchesByBusinessId,
+  FindBranchesByUserId,
 };
 
 const BranchRepository = new Proxy(BranchRawRepository, {

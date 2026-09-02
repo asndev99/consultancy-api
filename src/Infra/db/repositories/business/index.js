@@ -1,4 +1,9 @@
-import { GetManagersByBusiness, getUsersByBusinessId } from "../user/repo.js";
+import {
+  GetManagersByBusiness,
+  getUsersByBusinessId,
+  countBusinessUsers,
+  FindAssignedBranchesToUserByUserId,
+} from "../user/repo.js";
 import {
   findBusinessByName,
   RegisterBusiness,
@@ -11,6 +16,8 @@ const BusinessRepositoryRaw = {
   GetManagersByBusiness,
   FindBusinessById,
   getUsersByBusinessId,
+  countBusinessUsers,
+  FindAssignedBranchesToUserByUserId,
 };
 
 const BusinessRepository = new Proxy(BusinessRepositoryRaw, {

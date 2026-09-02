@@ -56,6 +56,12 @@ export async function countUsersByBusiness(businessId) {
   return prisma.user.count({ where: { businessId } });
 }
 
+export async function countBusinessUsers({ businessId, name, branchIds } = {}) {
+  return prisma.user.count({
+    where: buildBusinessUsersWhere({ businessId, name, branchIds }),
+  });
+}
+
 export async function addUserToBranch({
   userId,
   branchId,
@@ -77,38 +83,36 @@ export async function createUser(data) {
   return prisma.user.create({ data });
 }
 
-export async function getUsersByBusinessId(businessId) {
-  return prisma.user.findMany({
-    where: {
-      businessId,
-      isDeleted: false,
+function buildBusinessUsersWhere({ businessId, name, branchIds }) {
+  return {
+    businessId,
+    isDeleted: false,
+    role: {
+      notIn: ["Super Admin", "Business Admin"],
     },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      previousEmailAddress: true,
-      status: true,
-      inviteAcceptedAt: true,
-      createdAt: true,
-      updatedAt: true,
-      role: true,
-      userBranches: {
-        where: { deletedAt: null },
-        select: {
-          Branch: true,
-        },
-      },
-    },
-  });
+    ...(name ? { name: { contains: name, mode: "insensitive" } } : {}),
+    ...(branchIds
+      ? {
+          userBranches: {
+            some: {
+              deletedAt: null,
+              branchId: { in: branchIds },
+            },
+          },
+        }
+      : {}),
+  };
 }
 
-export function getUsersByBusinessIdAndBranchId(businessId, branchId) {
+export async function getUsersByBusinessId({
+  businessId,
+  name,
+  branchIds,
+  skip,
+  take,
+} = {}) {
   return prisma.user.findMany({
-    where: {
-      businessId,
-      isDeleted: false,
-    },
+    where: buildBusinessUsersWhere({ businessId, name, branchIds }),
     select: {
       id: true,
       name: true,
@@ -126,6 +130,9 @@ export function getUsersByBusinessIdAndBranchId(businessId, branchId) {
         },
       },
     },
+    orderBy: { id: "asc" },
+    skip,
+    take,
   });
 }
 

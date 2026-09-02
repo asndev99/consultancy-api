@@ -68,7 +68,7 @@ model Branch {
   createdAt           DateTime             @default(now()) @db.Timestamptz()
   updatedAt           DateTime             @updatedAt @db.Timestamptz()
   deletedAt           DateTime?            @db.Timestamptz()
-  branchUsers      UserBranch[]
+  branchUsers         UserBranch[]
   users               User[]
   studentApplications StudentApplication[]
   students            Student[]

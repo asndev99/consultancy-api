@@ -213,6 +213,12 @@ paths:
       tags:
         - Business
       summary: Get users belonging to a business, including their branches
+      description: >-
+        Accessible only by Business Admin and Manager. Business Admins get
+        every user in the business. Managers only get users who share a
+        branch with them, and only see the branches they themselves manage
+        for each user (per the UserBranch model) - any other branches the
+        user is assigned to are hidden.
       security:
         - bearerAuth: []
       parameters:
@@ -221,12 +227,30 @@ paths:
           required: true
           schema:
             type: integer
+        - name: name
+          in: query
+          required: false
+          description: Optional case-insensitive partial match on user name
+          schema:
+            type: string
         - name: branchId
           in: query
           required: false
           description: When provided, only returns users assigned to this branch
           schema:
             type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
       responses:
         "200":
           description: Users fetched
@@ -283,23 +307,32 @@ paths:
                                 type: string
                               country:
                                 type: string
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      pageSize:
+                        type: integer
+                      totalPages:
+                        type: integer
         "401":
           description: Unauthorized
         "403":
           description: Forbidden - insufficient permissions
-  /branch/{businessId}:
+  /branch:
     get:
       tags:
         - Branch
-      summary: Get active branches for a business, with their member count
+      summary: Get active branches for the authenticated user's business
+      description: >-
+        Accessible by all roles. Business Admins get every active branch for
+        their business. Any other role (e.g. Counselor, Manager) only gets
+        the branches they are assigned to, per the UserBranch model.
       security:
         - bearerAuth: []
-      parameters:
-        - name: businessId
-          in: path
-          required: true
-          schema:
-            type: integer
       responses:
         "200":
           description: Branches fetched
@@ -341,13 +374,8 @@ paths:
                           nullable: true
                         isActive:
                           type: boolean
-                        totalMembers:
-                          type: integer
         "401":
           description: Unauthorized
-        "403":
-          description: Forbidden - insufficient permissions
-  /branch:
     post:
       tags:
         - Branch

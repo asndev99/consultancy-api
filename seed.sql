@@ -50,4 +50,40 @@ INSERT INTO "Branch" (
 );
 
 
-"$2b$10$fqWpF8raVIkICZKeTLjpSeL8EDF9WZ/UZs67J48JddUrsZiSGBD/a"
+
+INSERT INTO "User" (
+    "userNo",
+    "role",
+    "status",
+    "name",
+    "email",
+    "password",
+    "businessId",
+    "branchId",
+    "isEmailVerified",
+    "isActive",
+    "isDeleted",
+    "createdBy",
+    "createdAt",
+    "updatedAt"
+) 
+VALUES (
+    'EMP-001',             -- userNo
+    'Business Admin',      -- role
+    'ACTIVE',              -- status (adjust based on your shared constants)
+    'John Doe',            -- name
+    'admin@example.com',   -- email
+    NULL,                  -- password (left empty/NULL)
+    NULL,                  -- businessId
+    NULL,                  -- branchId
+    TRUE,                 -- isEmailVerified
+    TRUE,                  -- isActive
+    FALSE,                 -- isDeleted
+    1,                     -- createdBy (ID of the user creating this record)
+    NOW(),                 -- createdAt
+    NOW()                  -- updatedAt
+)
+RETURNING *;
+
+-- 12345678
+-- $2b$10$YLuwbYRRbW62SjIWVbp7M.Qw8FfA.TMnWuQHvWYdeyLOX8I0N1H9y

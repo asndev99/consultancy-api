@@ -3,7 +3,9 @@ import BranchUseCases from "../../usecases/branch/index.js";
 export const getBranchesByBusiness = async (req, res, next) => {
   try {
     const data = await BranchUseCases.GetBranchesByBusinessUseCase(
-      req.params.businessId,
+      req.user.businessId,
+      req.user.id,
+      req.user.role,
     );
     res.status(200).json({ code: 0, data, message: "Branches fetched" });
   } catch (error) {

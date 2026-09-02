@@ -27,12 +27,19 @@ export const getBranchManagersByBusiness = async (req, res, next) => {
 
 export const getUsersByBusiness = async (req, res, next) => {
   try {
-    const data = await BusinessUseCases.GetUsersByBusinessUseCase(
-      req.user.role,
-      req.params.businessId,
-      req.user.assignedBranches,
-    );
-    res.status(200).json({ code: 1, data, message: "Users fetched" });
+    const { name, branchId, page, pageSize } = req.query;
+    const { data, pagination } = await BusinessUseCases.GetUsersByBusinessUseCase({
+      role: req.user.role,
+      businessId: req.params.businessId,
+      userId: req.user.id,
+      name: name || undefined,
+      branchId,
+      page: page ? Number(page) : undefined,
+      pageSize: pageSize ? Number(pageSize) : undefined,
+    });
+    res
+      .status(200)
+      .json({ code: 1, data, pagination, message: "Users fetched" });
   } catch (error) {
     next(error);
   }
