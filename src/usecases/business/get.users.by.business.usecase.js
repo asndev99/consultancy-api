@@ -1,5 +1,6 @@
 import BusinessRepository from "../../Infra/db/repositories/business/index.js";
 import { UserRoles } from "../../shared/application.constants.js";
+import { BadRequestException } from "../../shared/error.js";
 
 const emptyResult = (page, pageSize) => ({
   data: [],
@@ -15,92 +16,45 @@ export const GetUsersByBusinessUseCase = async ({
   page = 1,
   pageSize = 10,
 }) => {
-  const parsedBusinessId = Number(businessId);
-  const parsedBranchId = branchId != null ? Number(branchId) : undefined;
-  const skip = (page - 1) * pageSize;
+  if (branchId == null) {
+    throw new BadRequestException("branchId is required");
+  }
 
-  let branchIds;
+  const parsedBusinessId = Number(businessId);
+  const parsedBranchId = Number(branchId);
+  const skip = (page - 1) * pageSize;
 
   if (role === UserRoles["Manager"]) {
     const managerBranches =
       await BusinessRepository.FindAssignedBranchesToUserByUserId(
         Number(userId),
       );
-    const managerBranchIds = managerBranches.map((ub) => ub.branchId);
+    const isManagerOfBranch = managerBranches.some(
+      (ub) => ub.branchId === parsedBranchId,
+    );
 
-    if (managerBranchIds.length === 0) {
+    if (!isManagerOfBranch) {
       return emptyResult(page, pageSize);
     }
-
-    if (parsedBranchId != null) {
-      if (!managerBranchIds.includes(parsedBranchId)) {
-        return emptyResult(page, pageSize);
-      }
-      branchIds = [parsedBranchId];
-    } else {
-      branchIds = managerBranchIds;
-    }
-
-    const managerBranchIdSet = new Set(managerBranchIds);
-
-    const [total, users] = await Promise.all([
-      BusinessRepository.countBusinessUsers({
-        businessId: parsedBusinessId,
-        name,
-        branchIds,
-      }),
-      BusinessRepository.getUsersByBusinessId({
-        businessId: parsedBusinessId,
-        name,
-        branchIds,
-        skip,
-        take: pageSize,
-      }),
-    ]);
-
-    const data = users.map(({ userBranches, ...user }) => ({
-      ...user,
-      branches: userBranches
-        .map((ub) => ub.Branch)
-        .filter((branch) => managerBranchIdSet.has(branch.id)),
-    }));
-
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        pageSize,
-        totalPages: Math.ceil(total / pageSize),
-      },
-    };
   }
-
-  // Business Admin
-  branchIds = parsedBranchId != null ? [parsedBranchId] : undefined;
 
   const [total, users] = await Promise.all([
     BusinessRepository.countBusinessUsers({
       businessId: parsedBusinessId,
       name,
-      branchIds,
+      branchId: parsedBranchId,
     }),
     BusinessRepository.getUsersByBusinessId({
       businessId: parsedBusinessId,
       name,
-      branchIds,
+      branchId: parsedBranchId,
       skip,
       take: pageSize,
     }),
   ]);
 
-  const data = users.map(({ userBranches, ...user }) => ({
-    ...user,
-    branches: userBranches.map((ub) => ub.Branch),
-  }));
-
   return {
-    data,
+    data: users,
     pagination: {
       total,
       page,

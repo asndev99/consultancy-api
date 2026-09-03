@@ -212,13 +212,12 @@ paths:
     get:
       tags:
         - Business
-      summary: Get users belonging to a business, including their branches
+      summary: Get users belonging to a business branch
       description: >-
-        Accessible only by Business Admin and Manager. Business Admins get
-        every user in the business. Managers only get users who share a
-        branch with them, and only see the branches they themselves manage
-        for each user (per the UserBranch model) - any other branches the
-        user is assigned to are hidden.
+        Accessible only by Business Admin and Manager. branchId is required.
+        Business Admins get every user assigned to that branch. Managers only
+        get results if the branch is one they themselves manage (per the
+        UserBranch model) - otherwise an empty list is returned.
       security:
         - bearerAuth: []
       parameters:
@@ -235,8 +234,8 @@ paths:
             type: string
         - name: branchId
           in: query
-          required: false
-          description: When provided, only returns users assigned to this branch
+          required: true
+          description: Only returns users assigned to this branch
           schema:
             type: integer
         - name: page
@@ -292,21 +291,6 @@ paths:
                         updatedAt:
                           type: string
                           format: date-time
-                        branches:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              id:
-                                type: integer
-                              name:
-                                type: string
-                              branchCode:
-                                type: string
-                              city:
-                                type: string
-                              country:
-                                type: string
                   pagination:
                     type: object
                     properties:
