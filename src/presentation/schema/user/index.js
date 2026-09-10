@@ -122,6 +122,36 @@ export default {
     },
     additionalProperties: false,
   },
+  AcceptInviteSchema: {
+    $id: "https://example.com/schemas/accept-invite.json",
+    type: "object",
+    properties: {
+      password: {
+        type: "string",
+        minLength: 8,
+        errorMessage: {
+          minLength: "Password must be at least 8 characters long",
+        },
+      },
+    },
+    required: ["password"],
+    additionalProperties: false,
+  },
+  ResendInviteSchema: {
+    $id: "https://example.com/schemas/resend-invite.json",
+    type: "object",
+    properties: {
+      userId: {
+        type: "integer",
+        minimum: 1,
+        errorMessage: {
+          minimum: "userId must be a positive integer",
+        },
+      },
+    },
+    required: ["userId"],
+    additionalProperties: false,
+  },
   DeleteUserSchema: {
     $id: "https://example.com/schemas/delete-user.json",
     type: "object",

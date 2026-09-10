@@ -42,9 +42,10 @@ export const LoginUserUseCase = async (payload) => {
     assignedBranches = userBranches
       .map((item) => item.Branch)
       .filter((branch) => branch && !branch.isDeleted);
-  } else {
+  } else if (user.businessId != null) {
     assignedBranches = await BranchRepository.FindBranchesByBusinessId(
       user.businessId,
+      { isActive: true },
     );
   }
 
@@ -68,6 +69,8 @@ export const LoginUserUseCase = async (payload) => {
       businessId: user.businessId,
       assignedBranches,
     },
+    businessName: user.Business?.name ?? null,
+    businessLogo: user.Business?.businessLogo ?? null,
     accessToken,
     refreshToken,
   };

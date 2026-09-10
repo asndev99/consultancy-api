@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "30d";
+const INVITE_TOKEN_EXPIRES_IN = process.env.INVITE_TOKEN_EXPIRES_IN || "24h";
 
 export function generateToken(payload) {
   if (!JWT_SECRET) {
@@ -18,6 +19,13 @@ export function generateRefreshToken(payload) {
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRES_IN,
   });
+}
+
+export function generateInviteToken(payload) {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined in environment variables");
+  }
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: INVITE_TOKEN_EXPIRES_IN });
 }
 
 export function verifyToken(token) {

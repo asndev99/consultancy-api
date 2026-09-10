@@ -15,9 +15,15 @@ export const GetUsersByBusinessUseCase = async ({
   branchId,
   page = 1,
   pageSize = 10,
+  filterRole,
+  isActive,
 }) => {
   if (branchId == null) {
     throw new BadRequestException("branchId is required");
+  }
+
+  if (filterRole && !Object.values(UserRoles).includes(filterRole)) {
+    throw new BadRequestException("Invalid role filter");
   }
 
   const parsedBusinessId = Number(businessId);
@@ -43,11 +49,15 @@ export const GetUsersByBusinessUseCase = async ({
       businessId: parsedBusinessId,
       name,
       branchId: parsedBranchId,
+      role: filterRole,
+      isActive,
     }),
     BusinessRepository.getUsersByBusinessId({
       businessId: parsedBusinessId,
       name,
       branchId: parsedBranchId,
+      role: filterRole,
+      isActive,
       skip,
       take: pageSize,
     }),

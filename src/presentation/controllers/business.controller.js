@@ -27,7 +27,7 @@ export const getBranchManagersByBusiness = async (req, res, next) => {
 
 export const getUsersByBusiness = async (req, res, next) => {
   try {
-    const { name, branchId, page, pageSize } = req.query;
+    const { name, branchId, page, pageSize, role, isActive } = req.query;
     const { data, pagination } = await BusinessUseCases.GetUsersByBusinessUseCase({
       role: req.user.role,
       businessId: req.params.businessId,
@@ -36,6 +36,8 @@ export const getUsersByBusiness = async (req, res, next) => {
       branchId,
       page: page ? Number(page) : undefined,
       pageSize: pageSize ? Number(pageSize) : undefined,
+      filterRole: role || undefined,
+      isActive: isActive !== undefined ? isActive === "true" : undefined,
     });
     res
       .status(200)

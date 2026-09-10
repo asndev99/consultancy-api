@@ -70,7 +70,7 @@ INSERT INTO "User" (
 VALUES (
     'EMP-001',             -- userNo
     'Business Admin',      -- role
-    'ACTIVE',              -- status (adjust based on your shared constants)
+    'Active',              -- status (adjust based on your shared constants)
     'John Doe',            -- name
     'admin@example.com',   -- email
     NULL,                  -- password (left empty/NULL)

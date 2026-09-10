@@ -11,11 +11,15 @@ export const addUniversityForBusiness = async (req, res, next) => {
 
 export const GetUniveristyByBusiness = async (req, res, next) => {
   try {
-    const { page, pageSize } = req.query;
+    const { page, pageSize, universityName, isActive } = req.query;
     const data = await UniversityUseCases.GetUniversitiesByBusinessId(
       req.params.businessId,
       page ? Number(page) : undefined,
       pageSize ? Number(pageSize) : undefined,
+      {
+        ...(universityName ? { universityName } : {}),
+        ...(isActive !== undefined ? { isActive: isActive === "true" } : {}),
+      },
     );
     res.status(200).json({ code: 1, data, message: "Universities fetched" });
   } catch (error) {
@@ -53,6 +57,24 @@ export const addUniversityCourse = async (req, res, next) => {
   try {
     const data = await UniversityUseCases.AddUniversityCourseUseCase(req);
     res.status(201).json({ code: 1, data, message: "Course created" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const editUniversityCourse = async (req, res, next) => {
+  try {
+    const data = await UniversityUseCases.EditUniversityCourseUseCase(req);
+    res.status(200).json({ code: 1, data, message: "Course updated" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteUniversityCourse = async (req, res, next) => {
+  try {
+    const data = await UniversityUseCases.DeleteUniversityCourseUseCase(req);
+    res.status(200).json({ code: 1, data, message: "Course deleted" });
   } catch (error) {
     next(error);
   }

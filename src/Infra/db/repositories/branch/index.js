@@ -5,7 +5,7 @@ import {
   CreateBranchManager,
   FindByBranchName,
   FindBranchesByBusinessId,
-  FindBranchesByUserId,
+  CountBranchesByBusinessId,
 } from "./repo.js";
 
 const BranchRawRepository = {
@@ -15,7 +15,7 @@ const BranchRawRepository = {
   CreateBranchManager,
   FindByBranchName,
   FindBranchesByBusinessId,
-  FindBranchesByUserId,
+  CountBranchesByBusinessId,
 };
 
 const BranchRepository = new Proxy(BranchRawRepository, {

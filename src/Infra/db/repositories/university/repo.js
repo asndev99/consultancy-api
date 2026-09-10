@@ -21,12 +21,22 @@ export async function findUniversityById(id, { includeDeleted = false } = {}) {
   });
 }
 
-export async function CountUniversitiesByBusinessId(businessId) {
+function buildUniversityListWhere(businessId, filters = {}) {
+  const { universityName, isActive } = filters;
+
+  return {
+    businessId,
+    deletedAt: null,
+    ...(universityName
+      ? { universityName: { contains: universityName, mode: "insensitive" } }
+      : {}),
+    ...(typeof isActive === "boolean" ? { isActive } : {}),
+  };
+}
+
+export async function CountUniversitiesByBusinessId(businessId, filters = {}) {
   return prisma.university.count({
-    where: {
-      businessId,
-      deletedAt: null,
-    },
+    where: buildUniversityListWhere(businessId, filters),
   });
 }
 
@@ -59,14 +69,27 @@ export async function findUniversitiesByBusinessId(
   businessId,
   page = 1,
   pageSize = 10,
+  filters = {},
 ) {
-  return prisma.university.findMany({
-    where: {
-      businessId,
-    },
+  const universities = await prisma.university.findMany({
+    where: buildUniversityListWhere(businessId, filters),
     skip: (page - 1) * pageSize,
     take: pageSize,
+    include: {
+      _count: {
+        select: {
+          universityCourses: {
+            where: { isActive: true, deletedAt: null },
+          },
+        },
+      },
+    },
   });
+
+  return universities.map(({ _count, ...university }) => ({
+    ...university,
+    courseCount: _count.universityCourses,
+  }));
 }
 
 export async function update(id, data) {
@@ -82,6 +105,18 @@ export async function softDelete(id, deletedBy) {
     data: {
       deletedAt: new Date(),
       deletedBy,
+    },
+  });
+}
+
+export async function findUniversityCourseById(
+  id,
+  { includeDeleted = false } = {},
+) {
+  return prisma.universityCourses.findFirst({
+    where: {
+      id,
+      ...(includeDeleted ? {} : { deletedAt: null }),
     },
   });
 }

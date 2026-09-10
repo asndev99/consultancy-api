@@ -4,13 +4,15 @@ export async function GetUniversitiesByBusinessId(
   businessId,
   page = 1,
   pageSize = 10,
+  filters = {},
 ) {
   const [count, universities] = await Promise.all([
-    UniversityRepository.CountUniversitiesByBusinessId(+businessId),
+    UniversityRepository.CountUniversitiesByBusinessId(+businessId, filters),
     UniversityRepository.findUniversitiesByBusinessId(
       +businessId,
       page,
       pageSize,
+      filters,
     ),
   ]);
 

@@ -8,6 +8,7 @@ import {
   getBranchesByBusiness,
   createBranch,
   updateBranch,
+  updateBranchStatus,
   deleteBranch,
 } from "../controllers/branch.controller.js";
 
@@ -18,7 +19,12 @@ const manageBranchRoles = [
   UserRoles["Super Admin"],
 ];
 
-branchRouter.get("/", authMiddleware, getBranchesByBusiness);
+branchRouter.get(
+  "/",
+  authMiddleware,
+  verifyRole([UserRoles["Business Admin"]]),
+  getBranchesByBusiness,
+);
 
 branchRouter.post(
   "/",
@@ -26,6 +32,14 @@ branchRouter.post(
   verifyRole(manageBranchRoles),
   validateBody(branchSchemas.CreateBranchSchema),
   createBranch,
+);
+
+branchRouter.patch(
+  "/:branchId/status",
+  authMiddleware,
+  verifyRole(manageBranchRoles),
+  validateBody(branchSchemas.UpdateBranchStatusSchema),
+  updateBranchStatus,
 );
 
 branchRouter.patch(

@@ -12,3 +12,8 @@ export const UserStatus = {
   "Invitation Pending": "Invitation Pending",
   Freeze: "Freeze",
 };
+
+export const UniversityType = {
+  Public: "Public",
+  Private: "Private",
+};

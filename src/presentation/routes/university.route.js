@@ -8,6 +8,8 @@ import {
   getUniversityDetails,
   editUniversity,
   addUniversityCourse,
+  editUniversityCourse,
+  deleteUniversityCourse,
   addUniversityRequirement,
   editUniversityRequirement,
   deleteUniversityRequirement,
@@ -35,7 +37,23 @@ universityRouter.post(
   "/course",
   authMiddleware,
   verifyRole(manageUniversityRoles),
+  validateBody(universitySchemas.AddUniversityCourseSchema),
   addUniversityCourse,
+);
+
+universityRouter.patch(
+  "/course/:courseId",
+  authMiddleware,
+  verifyRole(manageUniversityRoles),
+  validateBody(universitySchemas.EditUniversityCourseSchema),
+  editUniversityCourse,
+);
+
+universityRouter.delete(
+  "/course/:courseId",
+  authMiddleware,
+  verifyRole(manageUniversityRoles),
+  deleteUniversityCourse,
 );
 
 universityRouter.get(
@@ -70,6 +88,7 @@ universityRouter.patch(
   "/:universityId",
   authMiddleware,
   verifyRole(manageUniversityRoles),
+  validateBody(universitySchemas.EditUniversitySchema),
   editUniversity,
 );
 

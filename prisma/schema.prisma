@@ -340,19 +340,19 @@ model StudentApplicationRemarks {
   deletedAt DateTime? @db.Timestamptz()
 }
 
-// enum UniversityType {
-//   Public
-//   Private
-// }
+enum UniversityType {
+  Public
+  Private
+}
 
 model University {
   id Int @id @default(autoincrement())
 
-  isFromSystem   Boolean @default(false)
+  isFromSystem   Boolean        @default(false)
   universityName String
   country        String
   link           String
-  // type           String
+  type           UniversityType @default(Public)
 
   businessId Int
   Business   Business @relation(fields: [businessId], references: [id])
@@ -405,9 +405,11 @@ model UniversityCourses {
   isActive           Boolean @default(false)
   courseRequirements String?
 
-  courseTitle String
-  degreeLevel String
-  tutionFee   Float
+  courseTitle       String
+  degreeLevel       String
+  tutionFeeCurrency String?
+  tutionPeriod      String?
+  tutionFee         Float
 
   createdBy Int
   updatedBy Int?

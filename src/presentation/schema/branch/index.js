@@ -51,6 +51,17 @@ export default {
     ],
     additionalProperties: false,
   },
+  UpdateBranchStatusSchema: {
+    $id: "https://example.com/schemas/update-branch-status.json",
+    type: "object",
+    properties: {
+      isActive: {
+        type: "boolean",
+      },
+    },
+    required: ["isActive"],
+    additionalProperties: false,
+  },
   UpdateBranchSchema: {
     $id: "https://example.com/schemas/update-branch.json",
     type: "object",

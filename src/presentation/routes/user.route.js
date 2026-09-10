@@ -5,6 +5,8 @@ import {
   deleteUser,
   login,
   updateUser,
+  acceptInvite,
+  resendInvite,
 } from "../controllers/user.controller.js";
 import { verifyRole } from "../../middleware/verify.role.middleware.js";
 import { UserRoles } from "../../shared/application.constants.js";
@@ -16,6 +18,12 @@ const userRouter = express.Router();
 userRouter.post("/login", validateBody(userSchemas.LoginUserSchema), login);
 
 userRouter.post(
+  "/accept-invite",
+  validateBody(userSchemas.AcceptInviteSchema),
+  acceptInvite,
+);
+
+userRouter.post(
   "/register",
   authMiddleware,
   verifyRole([
@@ -25,6 +33,18 @@ userRouter.post(
   ]),
   validateBody(userSchemas.RegisterUserSchema),
   createUser,
+);
+
+userRouter.post(
+  "/resend-invite",
+  authMiddleware,
+  verifyRole([
+    UserRoles["Business Admin"],
+    UserRoles["Super Admin"],
+    UserRoles["Manager"],
+  ]),
+  validateBody(userSchemas.ResendInviteSchema),
+  resendInvite,
 );
 
 userRouter.patch(

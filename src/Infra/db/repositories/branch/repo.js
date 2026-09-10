@@ -1,30 +1,56 @@
+import { UserRoles } from "../../../../shared/application.constants.js";
 import { prisma } from "../../prisma.client.js";
 
-export async function FindBranchesByBusinessId(businessId) {
-  return prisma.branch.findMany({
-    where: {
-      businessId,
-      isActive: true,
-      isDeleted: false,
-    },
+function buildBranchListWhere(businessId, filters = {}) {
+  const { isActive } = filters;
+
+  return {
+    businessId,
+    isDeleted: false,
+    ...(typeof isActive === "boolean" ? { isActive } : {}),
+  };
+}
+
+export async function CountBranchesByBusinessId(businessId, filters = {}) {
+  return prisma.branch.count({
+    where: buildBranchListWhere(businessId, filters),
   });
 }
 
-export async function FindBranchesByUserId(userId, businessId) {
-  return prisma.branch.findMany({
-    where: {
-      businessId,
-      isActive: true,
-      isDeleted: false,
-      branchUsers: {
-        some: {
-          userId,
-          isActive: true,
-          deletedAt: null,
-        },
-      },
-    },
+export async function FindBranchesByBusinessId(
+  businessId,
+  { isActive, skip, take, includeManagers = false } = {},
+) {
+  const branches = await prisma.branch.findMany({
+    where: buildBranchListWhere(businessId, { isActive }),
+    skip,
+    take,
+    ...(includeManagers
+      ? {
+          include: {
+            branchUsers: {
+              where: {
+                isActive: true,
+                deletedAt: null,
+                User: { role: UserRoles.Manager, isDeleted: false },
+              },
+              include: {
+                User: { select: { name: true } },
+              },
+            },
+          },
+        }
+      : {}),
   });
+
+  if (!includeManagers) {
+    return branches;
+  }
+
+  return branches.map(({ branchUsers, ...branch }) => ({
+    ...branch,
+    managers: branchUsers.map((branchUser) => branchUser.User.name),
+  }));
 }
 
 export async function CreateBranch(payload) {

@@ -2,8 +2,9 @@ import UserRepository from "../../Infra/db/repositories/user/index.js";
 import { UserStatus } from "../../shared/application.constants.js";
 import bcrypt from "bcryptjs";
 import { BadRequestException } from "../../shared/error.js";
-import { generateEmployeeCode } from "../../shared/utils.js";
+import { generateEmployeeCode, generateInviteToken } from "../../shared/utils.js";
 import BusinessRepository from "../../Infra/db/repositories/business/index.js";
+import { sendInviteEmail } from "../../lib/emails/index.js";
 
 export const RegisterUserUseCase = async (userId, payload) => {
   const existingUser =
@@ -64,5 +65,25 @@ export const RegisterUserUseCase = async (userId, payload) => {
     businessId: payload.businessId,
     createdBy: userId,
   });
+
+  const inviteToken = generateInviteToken({
+    purpose: "invite",
+    userId: user.id,
+    businessId: user.businessId,
+    branchId: payload.branchId,
+  });
+  const inviteLink = `${process.env.FRONTEND_DOMAIN}/verify-invite?query=${inviteToken}`;
+
+  try {
+    await sendInviteEmail({
+      to: user.email,
+      businessName: business.name,
+      businessLogo: business.businessLogo,
+      inviteLink,
+    });
+  } catch (err) {
+    console.error("Failed to send invite email:", err.message);
+  }
+
   return user;
 };

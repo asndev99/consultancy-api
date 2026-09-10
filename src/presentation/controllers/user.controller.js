@@ -18,6 +18,33 @@ export const createUser = async (req, res, next) => {
   }
 };
 
+export const acceptInvite = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.AcceptInviteUseCase(
+      req.query.token,
+      req.body.password,
+    );
+    res
+      .status(200)
+      .json({ code: 1, data, message: "Invite accepted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendInvite = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.ResendInviteUseCase(req, req.body.userId);
+    res.status(200).json({
+      code: 1,
+      data: { id: data.id, email: data.email, inviteSentAt: data.inviteSentAt },
+      message: "Invite resent",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteUser = async (req, res, next) => {
   try {
     const data = await UserUseCases.DeleteUserByBusinessUseCase(

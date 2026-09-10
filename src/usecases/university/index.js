@@ -1,4 +1,6 @@
 import { AddUniversityCourseUseCase } from "./add.course.usecase.js";
+import { EditUniversityCourseUseCase } from "./edit.university.course.usecase.js";
+import { DeleteUniversityCourseUseCase } from "./delete.university.course.usecase.js";
 import { AddUniversityUseCase } from "./add.university.usecase.js";
 import { GetUniversitiesByBusinessId } from "./get.universities.by.businessId.usecase.js";
 import { EditUniversityUseCase } from "./edit.university.usecase.js";
@@ -10,6 +12,8 @@ import { AddUniversityRequirementUseCase } from "./add.university.requirement.us
 const UniversityUseCases = {
   AddUniversityUseCase,
   AddUniversityCourseUseCase,
+  EditUniversityCourseUseCase,
+  DeleteUniversityCourseUseCase,
   GetUniversitiesByBusinessId,
   EditUniversityUseCase,
   GetUniversityDetailsUseCase,

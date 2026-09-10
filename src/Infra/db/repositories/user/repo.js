@@ -16,6 +16,7 @@ export async function findUserByEmail(email) {
       Business: {
         select: {
           name: true,
+          businessLogo: true,
         },
       },
     },
@@ -56,9 +57,15 @@ export async function countUsersByBusiness(businessId) {
   return prisma.user.count({ where: { businessId } });
 }
 
-export async function countBusinessUsers({ businessId, name, branchId } = {}) {
+export async function countBusinessUsers({
+  businessId,
+  name,
+  branchId,
+  role,
+  isActive,
+} = {}) {
   return prisma.user.count({
-    where: buildBusinessUsersWhere({ businessId, name, branchId }),
+    where: buildBusinessUsersWhere({ businessId, name, branchId, role, isActive }),
   });
 }
 
@@ -83,14 +90,15 @@ export async function createUser(data) {
   return prisma.user.create({ data });
 }
 
-function buildBusinessUsersWhere({ businessId, name, branchId }) {
+function buildBusinessUsersWhere({ businessId, name, branchId, role, isActive }) {
   return {
     businessId,
     isDeleted: false,
-    role: {
+    role: role ?? {
       notIn: ["Super Admin", "Business Admin"],
     },
     ...(name ? { name: { contains: name, mode: "insensitive" } } : {}),
+    ...(typeof isActive === "boolean" ? { isActive } : {}),
     userBranches: {
       some: {
         deletedAt: null,
@@ -104,17 +112,21 @@ export async function getUsersByBusinessId({
   businessId,
   name,
   branchId,
+  role,
+  isActive,
   skip,
   take,
 } = {}) {
   return prisma.user.findMany({
-    where: buildBusinessUsersWhere({ businessId, name, branchId }),
+    where: buildBusinessUsersWhere({ businessId, name, branchId, role, isActive }),
     select: {
       id: true,
       name: true,
       email: true,
       previousEmailAddress: true,
       status: true,
+      isActive: true,
+      inviteSentAt: true,
       inviteAcceptedAt: true,
       createdAt: true,
       updatedAt: true,
