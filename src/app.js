@@ -10,10 +10,13 @@ import branchRouter from "./presentation/routes/branch.route.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
+import cors from "cors";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+
+app.use(cors({ origin: "*" }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
