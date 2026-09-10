@@ -340,10 +340,10 @@ model StudentApplicationRemarks {
   deletedAt DateTime? @db.Timestamptz()
 }
 
-enum UniversityType {
-  Public
-  Private
-}
+// enum UniversityType {
+//   Public
+//   Private
+// }
 
 model University {
   id Int @id @default(autoincrement())
@@ -352,7 +352,7 @@ model University {
   universityName String
   country        String
   link           String
-  type           String
+  // type           String
 
   businessId Int
   Business   Business @relation(fields: [businessId], references: [id])
