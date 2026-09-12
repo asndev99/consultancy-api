@@ -8,6 +8,7 @@ import {
   findBusinessByName,
   RegisterBusiness,
   FindBusinessById,
+  IncrementStudentSequence,
 } from "./repo.js";
 
 const BusinessRepositoryRaw = {
@@ -18,6 +19,7 @@ const BusinessRepositoryRaw = {
   getUsersByBusinessId,
   countBusinessUsers,
   FindAssignedBranchesToUserByUserId,
+  IncrementStudentSequence,
 };
 
 const BusinessRepository = new Proxy(BusinessRepositoryRaw, {

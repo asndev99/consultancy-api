@@ -65,6 +65,54 @@ export async function findUniversityDetailsById(id) {
   });
 }
 
+// Used to search target universities (with their courses) when working with
+// a student - no pagination, matches on university name, country, or any of
+// its courses' titles. An empty/nullable searchTerm returns every university.
+export async function findTargetUniversitiesByBusinessId(
+  businessId,
+  searchTerm,
+) {
+  const trimmedSearchTerm =
+    typeof searchTerm === "string" ? searchTerm.trim() : "";
+
+  return prisma.university.findMany({
+    where: {
+      businessId,
+      deletedAt: null,
+      ...(trimmedSearchTerm
+        ? {
+            OR: [
+              {
+                universityName: {
+                  contains: trimmedSearchTerm,
+                  mode: "insensitive",
+                },
+              },
+              { country: { contains: trimmedSearchTerm, mode: "insensitive" } },
+              {
+                universityCourses: {
+                  some: {
+                    deletedAt: null,
+                    courseTitle: {
+                      contains: trimmedSearchTerm,
+                      mode: "insensitive",
+                    },
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+    },
+    include: {
+      universityCourses: {
+        where: { deletedAt: null },
+      },
+    },
+    orderBy: { universityName: "asc" },
+  });
+}
+
 export async function findUniversitiesByBusinessId(
   businessId,
   page = 1,

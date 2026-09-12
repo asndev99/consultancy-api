@@ -61,3 +61,8 @@ export function generateEmployeeCode(businessName, number) {
 
   return `${prefix}-${paddedNumber}`;
 }
+
+export function generateStudentCode(businessCode, sequence) {
+  const paddedNumber = String(sequence).padStart(5, "0");
+  return `${businessCode}-STU-${paddedNumber}`;
+}

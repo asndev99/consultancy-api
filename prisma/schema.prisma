@@ -118,6 +118,7 @@ model User {
   officerApplications StudentApplication[] @relation("AdmissionTeamOfficer")
   studentApplications StudentApplication[] @relation("Counselor")
   // sessions            Sessions[]
+  students            Student[]
 
   @@unique([businessId, email])
 }
@@ -150,23 +151,41 @@ model UserBranch {
   @@unique([userId, branchId])
 }
 
+enum LeadStage {
+  NewLead
+  DocumentSubmitted
+  ApplicationSubmitted
+  VisaProcessing
+  Enrolled
+}
+
 //lead //need to add marketing source in future.
 model Student {
   id Int @id @default(autoincrement())
 
   studentNo String @unique
 
-  firstName String
-  email     String
-  phoneNo   String
+  fullName String
+  email    String
+  phoneNo  String
 
-  status String
+  preferredTargetCountries String[]  @default([])
+  targetDegree             String?
+  leadStage                LeadStage @default(NewLead)
+
+  status String?
 
   businessId Int
   Business   Business @relation(fields: [businessId], references: [id])
 
-  branchId Int?
-  Branch   Branch? @relation(fields: [branchId], references: [id])
+  branchId Int
+  Branch   Branch @relation(fields: [branchId], references: [id])
+
+  counselorId Int? // it means counselor assigned.
+  Counselor   User? @relation(fields: [counselorId], references: [id])
+
+  previousBranch       String?
+  studentTransferredAt DateTime? //when branch is changed.
 
   isActive  Boolean @default(false)
   isDeleted Boolean @default(false)
@@ -180,19 +199,51 @@ model Student {
   updatedAt           DateTime             @updatedAt @db.Timestamptz()
   deletedAt           DateTime?            @db.Timestamptz()
   studentApplications StudentApplication[]
+  targetUniversities  TargetUniversity[]
+
+  @@unique([businessId, branchId, email, phoneNo])
 }
 
-model PreferredCountries {
+model TargetUniversity {
   id Int @id @default(autoincrement())
 
-  userId      Int
-  countryName String
+  studentId Int
+  Student   Student @relation(fields: [studentId], references: [id])
 
-  isActive Boolean @default(false)
+  universityId Int
+  University   University @relation(fields: [universityId], references: [id])
+
+  isActive  Boolean @default(false)
+  isDeleted Boolean @default(false)
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt     DateTime       @default(now()) @db.Timestamptz()
+  updatedAt     DateTime       @updatedAt @db.Timestamptz()
+  deletedAt     DateTime?      @db.Timestamptz()
+  targetCourses TargetCourse[]
+
+  @@unique([studentId, universityId])
+}
+
+model TargetCourse {
+  id                 Int              @id @default(autoincrement())
+  targetUniversityId Int
+  TargetUniversity   TargetUniversity @relation(fields: [targetUniversityId], references: [id], onDelete: Cascade)
+
+  courseId  Int
+  Course    UniversityCourses @relation(fields: [courseId], references: [id])
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
 
   createdAt DateTime  @default(now()) @db.Timestamptz()
   updatedAt DateTime  @updatedAt @db.Timestamptz()
   deletedAt DateTime? @db.Timestamptz()
+
+  @@unique([targetUniversityId, courseId])
 }
 
 //one student can have many application.
@@ -370,6 +421,7 @@ model University {
 
   universityRequirements UniversityRequirement[]
   universityCourses      UniversityCourses[]
+  targetUniversities     TargetUniversity[]
 }
 
 model UniversityRequirement {
@@ -419,6 +471,7 @@ model UniversityCourses {
   updatedAt             DateTime               @updatedAt @db.Timestamptz()
   deletedAt             DateTime?              @db.Timestamptz()
   universityIntakeDates UniversityIntakeDate[]
+  targetCourses         TargetCourse[]
 }
 
 model UniversityIntakeDate {

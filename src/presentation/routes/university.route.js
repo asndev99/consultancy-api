@@ -5,6 +5,7 @@ import { UserRoles } from "../../shared/application.constants.js";
 import {
   addUniversityForBusiness,
   GetUniveristyByBusiness,
+  getTargetUniversities,
   getUniversityDetails,
   editUniversity,
   addUniversityCourse,
@@ -23,6 +24,14 @@ const manageUniversityRoles = [
   UserRoles["Business Admin"],
   UserRoles["Super Admin"],
   UserRoles["Manager"],
+];
+
+// Roles that create/manage students also need to search target universities
+// for them.
+const targetUniversityRoles = [
+  ...manageUniversityRoles,
+  UserRoles["Counselor"],
+  UserRoles["Sub Agent"],
 ];
 
 universityRouter.post(
@@ -90,6 +99,13 @@ universityRouter.patch(
   verifyRole(manageUniversityRoles),
   validateBody(universitySchemas.EditUniversitySchema),
   editUniversity,
+);
+
+universityRouter.get(
+  "/targets/search",
+  authMiddleware,
+  verifyRole(targetUniversityRoles),
+  getTargetUniversities,
 );
 
 universityRouter.get(

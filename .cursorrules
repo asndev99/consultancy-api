@@ -15,9 +15,5 @@
 - Do NOT change, add, or delete any database schema fields or Prisma models without explicit user consent.
 - Do NOT run database migrations or schema sync commands (e.g., `prisma migrate`, `prisma db push`) without explicit approval.
 
-## Workflow & Communication
-- Ask clarifying questions first if any prompt, requirement, or instruction is ambiguous or unclear before proceeding with code changes.
-
-## Enforcement Guidelines
-- Do NOT place route logic or business logic directly inside root directory files.
-- When creating new features, always maintain the existing layer hierarchy under `src/`.
+## API Documentation
+- After adding, changing, or removing any endpoint (route, request/response shape, or params), update `docs/openapi.yml` in the same change so it stays in sync with the implementation.

@@ -13,7 +13,8 @@ import {
   softDeleteUniversityRequirement,
   CountUniversitiesByBusinessId,
   findUniversitiesByBusinessId,
-  findUniversityByBusinessId
+  findUniversityByBusinessId,
+  findTargetUniversitiesByBusinessId,
 } from "./repo.js";
 
 const UniversityRepositoryRaw = {
@@ -31,7 +32,8 @@ const UniversityRepositoryRaw = {
   softDeleteUniversityRequirement,
   CountUniversitiesByBusinessId,
   findUniversitiesByBusinessId,
-  findUniversityByBusinessId
+  findUniversityByBusinessId,
+  findTargetUniversitiesByBusinessId,
 };
 
 const UniversityRepository = new Proxy(UniversityRepositoryRaw, {

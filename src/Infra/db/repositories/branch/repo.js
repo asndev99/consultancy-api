@@ -67,6 +67,17 @@ export async function FindByBranchName(name) {
   });
 }
 
+export function FindBranchById(branchId, businessId) {
+  return prisma.branch.findFirst({
+    where: {
+      id: branchId,
+      isDeleted: false,
+      // Super Admins have no businessId, so they aren't scoped to one business.
+      ...(businessId != null ? { businessId } : {}),
+    },
+  });
+}
+
 export function UpdateBranch(branchId, payload, businessId) {
   return prisma.branch.update({
     where: {

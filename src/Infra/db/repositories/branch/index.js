@@ -4,6 +4,7 @@ import {
   UpdateBranch,
   CreateBranchManager,
   FindByBranchName,
+  FindBranchById,
   FindBranchesByBusinessId,
   CountBranchesByBusinessId,
 } from "./repo.js";
@@ -14,6 +15,7 @@ const BranchRawRepository = {
   UpdateBranch,
   CreateBranchManager,
   FindByBranchName,
+  FindBranchById,
   FindBranchesByBusinessId,
   CountBranchesByBusinessId,
 };

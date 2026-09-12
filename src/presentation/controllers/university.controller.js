@@ -27,6 +27,21 @@ export const GetUniveristyByBusiness = async (req, res, next) => {
   }
 };
 
+export const getTargetUniversities = async (req, res, next) => {
+  try {
+    const { searchTerm } = req.query;
+    const data = await UniversityUseCases.GetTargetUniversitiesUseCase(
+      req.user.businessId,
+      searchTerm,
+    );
+    res
+      .status(200)
+      .json({ code: 1, data, message: "Target universities fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getUniversityDetails = async (req, res, next) => {
   try {
     const data = await UniversityUseCases.GetUniversityDetailsUseCase(

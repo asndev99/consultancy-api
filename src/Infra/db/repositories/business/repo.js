@@ -21,3 +21,13 @@ export const FindBusinessById = (businessId) => {
     },
   });
 };
+
+// Atomically bumps the business' student counter so concurrent creates never
+// collide on the same sequence number.
+export const IncrementStudentSequence = (businessId) => {
+  return prisma.business.update({
+    where: { id: Number(businessId) },
+    data: { studentSequence: { increment: 1 } },
+    select: { studentSequence: true, businessCode: true },
+  });
+};

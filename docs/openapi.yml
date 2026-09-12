@@ -703,6 +703,443 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Branch not found
+  /student:
+    post:
+      tags:
+        - Student
+      summary: Create a student
+      description: Accessible by Sub Agent, Counselor, Manager and Business Admin.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullName
+                - email
+                - phoneNo
+                - businessId
+                - branchId
+              properties:
+                fullName:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                phoneNo:
+                  type: string
+                  minLength: 2
+                businessId:
+                  type: integer
+                branchId:
+                  type: integer
+                preferredTargetCountries:
+                  type: array
+                  items:
+                    type: string
+                targetDegree:
+                  type: string
+                counselorId:
+                  type: integer
+                  minimum: 1
+                  description: User to assign as this student's counselor
+      responses:
+        "201":
+          description: Student created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student created
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      studentNo:
+                        type: string
+                      fullName:
+                        type: string
+                      email:
+                        type: string
+                      phoneNo:
+                        type: string
+                      businessId:
+                        type: integer
+                      branchId:
+                        type: integer
+                      preferredTargetCountries:
+                        type: array
+                        items:
+                          type: string
+                      targetDegree:
+                        type: string
+                        nullable: true
+                      leadStage:
+                        type: string
+                      counselorId:
+                        type: integer
+                        nullable: true
+                      isActive:
+                        type: boolean
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Business or branch not found
+  /student/branch/{branchId}:
+    get:
+      tags:
+        - Student
+      summary: Get a paginated list of students for a branch
+      description: >-
+        Accessible by Sub Agent, Counselor, Manager and Business Admin.
+        Scoped by the authenticated user's businessId and the branchId path
+        param together.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: counselorId
+          in: query
+          required: false
+          description: Optional filter by assigned counselor
+          schema:
+            type: integer
+        - name: leadStage
+          in: query
+          required: false
+          description: Optional filter by lead stage
+          schema:
+            type: string
+            enum:
+              [
+                "NewLead",
+                "DocumentSubmitted",
+                "ApplicationSubmitted",
+                "VisaProcessing",
+                "Enrolled",
+              ]
+        - name: searchTerm
+          in: query
+          required: false
+          description: Optional case-insensitive partial match on fullName, email, or phoneNo
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Students fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Students fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        studentNo:
+                          type: string
+                        fullName:
+                          type: string
+                        email:
+                          type: string
+                        phoneNo:
+                          type: string
+                        businessId:
+                          type: integer
+                        branchId:
+                          type: integer
+                        leadStage:
+                          type: string
+                        counselorId:
+                          type: integer
+                          nullable: true
+                        isActive:
+                          type: boolean
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      pageSize:
+                        type: integer
+                      totalPages:
+                        type: integer
+        "400":
+          description: Validation failed - missing branchId or invalid leadStage
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+  /student/{studentId}/target-universities:
+    get:
+      tags:
+        - Student
+      summary: Get a student's target universities
+      description: >-
+        Accessible by Sub Agent, Counselor, Manager and Business Admin.
+        Returns every non-deleted target university for the student, each
+        with its University (including universityRequirements), and its
+        targetCourses (including the referenced UniversityCourses details).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Target universities fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Target universities fetched
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TargetUniversity"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student not found
+    post:
+      tags:
+        - Student
+      summary: Bulk add target universities (with optional initial courses)
+      description: >-
+        Accessible by Sub Agent, Counselor, Manager and Business Admin.
+        Existing (studentId, universityId) pairs, and existing
+        (targetUniversityId, courseId) pairs for any newly/already added
+        target university, are skipped instead of raising an error.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                required:
+                  - universityId
+                properties:
+                  universityId:
+                    type: integer
+                  courseIds:
+                    type: array
+                    items:
+                      type: integer
+              example:
+                - universityId: 101
+                  courseIds: [201, 202]
+                - universityId: 102
+                  courseIds: []
+      responses:
+        "201":
+          description: Target universities added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Target universities added
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TargetUniversity"
+        "400":
+          description: Validation failed, or an unknown university/course for this business
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student not found
+  /student/{studentId}/target-universities/{targetUniversityId}:
+    delete:
+      tags:
+        - Student
+      summary: Delete a target university section
+      description: >-
+        Hard deletes the target university and, via cascade, every target
+        course attached to it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: targetUniversityId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Target university deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student or target university not found
+  /student/{studentId}/target-universities/{targetUniversityId}/courses:
+    post:
+      tags:
+        - Student
+      summary: Add courses to an existing target university section
+      description: >-
+        Accessible by Sub Agent, Counselor, Manager and Business Admin.
+        Courses already attached to this target university are skipped
+        instead of raising an error.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: targetUniversityId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - courseIds
+              properties:
+                courseIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: integer
+              example:
+                courseIds: [203, 204]
+      responses:
+        "201":
+          description: Target university courses added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Target university courses added
+                  data:
+                    $ref: "#/components/schemas/TargetUniversity"
+        "400":
+          description: Validation failed, or a course doesn't belong to this target university
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student or target university not found
+  /student/{studentId}/target-universities/{targetUniversityId}/courses/{targetCourseId}:
+    delete:
+      tags:
+        - Student
+      summary: Remove a single course from a target university section
+      description: Hard deletes the target course row.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: targetUniversityId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: targetCourseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Target university course deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student, target university, or target course not found
   /university/add:
     post:
       tags:
@@ -1064,6 +1501,84 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: University not found
+  /university/targets/search:
+    get:
+      tags:
+        - University
+      summary: Search target universities for a student
+      description: >-
+        Fetches target universities (with their courses) for a student. No
+        pagination. searchTerm matches against university name, country, or
+        any of the university's course titles. If searchTerm is empty or
+        omitted, every university for the authenticated user's business is
+        returned along with its courses.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: searchTerm
+          in: query
+          required: false
+          description: Optional case-insensitive partial match on university name, country, or course title
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Target universities fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 1
+                  message:
+                    type: string
+                    example: Target universities fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        universityName:
+                          type: string
+                        country:
+                          type: string
+                        link:
+                          type: string
+                        type:
+                          type: string
+                          enum: [Public, Private]
+                        businessId:
+                          type: integer
+                        universityCourses:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              courseTitle:
+                                type: string
+                              degreeLevel:
+                                type: string
+                              tutionFee:
+                                type: number
+                              tutionFeeCurrency:
+                                type: string
+                                nullable: true
+                              tutionPeriod:
+                                type: string
+                                nullable: true
+                              courseRequirements:
+                                type: string
+                                nullable: true
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
   /university/{universityId}:
     patch:
       tags:
@@ -1197,6 +1712,79 @@ paths:
         "403":
           description: Forbidden - insufficient permissions
 components:
+  schemas:
+    TargetUniversity:
+      type: object
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: integer
+        universityId:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        University:
+          type: object
+          properties:
+            id:
+              type: integer
+            universityName:
+              type: string
+            country:
+              type: string
+            link:
+              type: string
+            type:
+              type: string
+              enum: [Public, Private]
+            universityRequirements:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  details:
+                    type: string
+                  sortOrder:
+                    type: integer
+        targetCourses:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              targetUniversityId:
+                type: integer
+              courseId:
+                type: integer
+              Course:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  courseTitle:
+                    type: string
+                  degreeLevel:
+                    type: string
+                  tutionFee:
+                    type: number
+                  tutionFeeCurrency:
+                    type: string
+                    nullable: true
+                  tutionPeriod:
+                    type: string
+                    nullable: true
+                  courseRequirements:
+                    type: string
+                    nullable: true
   securitySchemes:
     bearerAuth:
       type: http
