@@ -8,6 +8,7 @@ import userRouter from "./presentation/routes/user.route.js";
 import businessRouter from "./presentation/routes/business.route.js";
 import branchRouter from "./presentation/routes/branch.route.js";
 import studentRouter from "./presentation/routes/student.route.js";
+import documentRouter from "./presentation/routes/document.route.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
@@ -36,6 +37,7 @@ app.use("/user", userRouter);
 app.use("/business", businessRouter);
 app.use("/branch", branchRouter);
 app.use("/student", studentRouter);
+app.use("/document", documentRouter);
 
 app.use(errorMiddleware);
 

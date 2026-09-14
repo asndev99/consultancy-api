@@ -3,6 +3,7 @@ import { CreateBranchUseCase } from "./create.branch.usecase.js";
 import { UpdateBranchUseCase } from "./update.branch.usecase.js";
 import { UpdateBranchStatusUseCase } from "./update.branch.status.usecase.js";
 import { DeleteBranchUseCase } from "./delete.branch.usecase.js";
+import { GetCounselorsByBranchUseCase } from "./get.counselors.by.branch.usecase.js";
 
 const BranchUseCases = {
   GetBranchesByBusinessUseCase,
@@ -10,6 +11,7 @@ const BranchUseCases = {
   UpdateBranchUseCase,
   UpdateBranchStatusUseCase,
   DeleteBranchUseCase,
+  GetCounselorsByBranchUseCase,
 };
 
 export default BranchUseCases;

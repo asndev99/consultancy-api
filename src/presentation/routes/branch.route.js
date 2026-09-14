@@ -10,6 +10,7 @@ import {
   updateBranch,
   updateBranchStatus,
   deleteBranch,
+  getCounselorsByBranch,
 } from "../controllers/branch.controller.js";
 
 const branchRouter = express.Router();
@@ -17,6 +18,11 @@ const branchRouter = express.Router();
 const manageBranchRoles = [
   UserRoles["Business Admin"],
   UserRoles["Super Admin"],
+];
+
+const viewBranchCounselorsRoles = [
+  UserRoles["Manager"],
+  UserRoles["Business Admin"],
 ];
 
 branchRouter.get(
@@ -55,6 +61,13 @@ branchRouter.delete(
   authMiddleware,
   verifyRole(manageBranchRoles),
   deleteBranch,
+);
+
+branchRouter.get(
+  "/:branchId/counselors",
+  authMiddleware,
+  verifyRole(viewBranchCounselorsRoles),
+  getCounselorsByBranch,
 );
 
 export default branchRouter;

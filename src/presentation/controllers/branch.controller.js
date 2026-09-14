@@ -63,3 +63,15 @@ export const deleteBranch = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getCounselorsByBranch = async (req, res, next) => {
+  try {
+    const data = await BranchUseCases.GetCounselorsByBranchUseCase(
+      req.query.organizationId,
+      req.params.branchId,
+    );
+    res.status(200).json({ code: 0, data, message: "Counselors fetched" });
+  } catch (error) {
+    next(error);
+  }
+};

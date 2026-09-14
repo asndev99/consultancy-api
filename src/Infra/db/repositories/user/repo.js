@@ -138,6 +138,27 @@ export async function getUsersByBusinessId({
   });
 }
 
+export async function FindCounselorsByBranch(businessId, branchId) {
+  return prisma.user.findMany({
+    where: {
+      businessId,
+      role: UserRoles.Counselor,
+      isDeleted: false,
+      userBranches: {
+        some: {
+          deletedAt: null,
+          branchId,
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
 export async function GetManagersByBusiness(businessId) {
   return prisma.user.findMany({
     where: {

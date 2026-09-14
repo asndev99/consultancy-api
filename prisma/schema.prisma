@@ -200,8 +200,26 @@ model Student {
   deletedAt           DateTime?            @db.Timestamptz()
   studentApplications StudentApplication[]
   targetUniversities  TargetUniversity[]
+  documentTitles      DocumentTitle[]
 
   @@unique([businessId, branchId, email, phoneNo])
+}
+
+model DocumentTitle {
+  id            Int     @id @default(autoincrement())
+  studentId     Int
+  Student       Student @relation(fields: [studentId], references: [id])
+  documentTitle String
+  isMandatory   Boolean
+  quantity      Int?
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
 }
 
 model TargetUniversity {

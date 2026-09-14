@@ -703,6 +703,57 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Branch not found
+  /branch/{branchId}/counselors:
+    get:
+      tags:
+        - Branch
+      summary: Get users with role Counselor assigned to a branch
+      description: Accessible only by Manager and Business Admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: organizationId
+          in: query
+          required: true
+          description: Business the branch belongs to
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Counselors fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Counselors fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+        "400":
+          description: Validation failed - missing organizationId
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Branch not found
   /student:
     post:
       tags:
@@ -1140,6 +1191,179 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Student, target university, or target course not found
+  /document/titles:
+    post:
+      tags:
+        - Document
+      summary: Create a document title for a student
+      description: >-
+        Accessible by Manager, Business Admin, Counselor and Sub Agent.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - studentId
+                - documentTitle
+                - isMandatory
+              properties:
+                studentId:
+                  type: integer
+                documentTitle:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                isMandatory:
+                  type: boolean
+                quantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        "201":
+          description: Document title created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Document title created
+                  data:
+                    $ref: "#/components/schemas/DocumentTitle"
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student not found
+  /document/titles/student/{studentId}:
+    get:
+      tags:
+        - Document
+      summary: Get document titles for a student
+      description: >-
+        Accessible by Manager, Business Admin, Counselor and Sub Agent.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document titles fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Document titles fetched
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DocumentTitle"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student not found
+  /document/titles/{documentTitleId}:
+    patch:
+      tags:
+        - Document
+      summary: Update a document title
+      description: >-
+        Accessible by Manager, Business Admin, Counselor and Sub Agent.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: documentTitleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                documentTitle:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                isMandatory:
+                  type: boolean
+                quantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        "200":
+          description: Document title updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Document title updated
+                  data:
+                    $ref: "#/components/schemas/DocumentTitle"
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Document title not found
+    delete:
+      tags:
+        - Document
+      summary: Soft delete a document title
+      description: >-
+        Accessible by Manager, Business Admin, Counselor and Sub Agent.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: documentTitleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document title deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Document title not found
   /university/add:
     post:
       tags:
@@ -1713,6 +1937,26 @@ paths:
           description: Forbidden - insufficient permissions
 components:
   schemas:
+    DocumentTitle:
+      type: object
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: integer
+        documentTitle:
+          type: string
+        isMandatory:
+          type: boolean
+        quantity:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     TargetUniversity:
       type: object
       properties:

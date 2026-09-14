@@ -10,6 +10,7 @@ import {
   findUserById,
   updateUserById,
   FindAssignedBranchesToUserByUserId,
+  FindCounselorsByBranch,
 } from "./repo.js";
 
 const UserRepositoryRaw = {
@@ -24,6 +25,7 @@ const UserRepositoryRaw = {
   findUserById,
   updateUserById,
   FindAssignedBranchesToUserByUserId,
+  FindCounselorsByBranch,
 };
 
 const UserRepository = new Proxy(UserRepositoryRaw, {
