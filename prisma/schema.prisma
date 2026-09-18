@@ -114,11 +114,12 @@ model User {
 
   userBranches UserBranch[]
 
-  managedApplications StudentApplication[] @relation("ApplicationManager")
-  officerApplications StudentApplication[] @relation("AdmissionTeamOfficer")
-  studentApplications StudentApplication[] @relation("Counselor")
+  managedApplications       StudentApplication[]        @relation("ApplicationManager")
+  officerApplications       StudentApplication[]        @relation("AdmissionTeamOfficer")
+  // studentApplications StudentApplication[] @relation("Counselor")
   // sessions            Sessions[]
-  students            Student[]
+  students                  Student[]
+  studentApplicationRemarks StudentApplicationRemarks[]
 
   @@unique([businessId, email])
 }
@@ -195,12 +196,13 @@ model Student {
   deletedBy Int?
 
   // FIX: added @default(now())
-  createdAt           DateTime             @default(now()) @db.Timestamptz()
-  updatedAt           DateTime             @updatedAt @db.Timestamptz()
-  deletedAt           DateTime?            @db.Timestamptz()
-  studentApplications StudentApplication[]
-  targetUniversities  TargetUniversity[]
-  documentTitles      DocumentTitle[]
+  createdAt             DateTime               @default(now()) @db.Timestamptz()
+  updatedAt             DateTime               @updatedAt @db.Timestamptz()
+  deletedAt             DateTime?              @db.Timestamptz()
+  studentApplications   StudentApplication[]
+  targetUniversities    TargetUniversity[]
+  documentTitles        DocumentTitle[]
+  studentDocumentMedias StudentDocumentMedia[]
 
   @@unique([businessId, branchId, email, phoneNo])
 }
@@ -213,6 +215,28 @@ model DocumentTitle {
   isMandatory   Boolean
   quantity      Int?
 
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt             DateTime               @default(now()) @db.Timestamptz()
+  updatedAt             DateTime               @updatedAt @db.Timestamptz()
+  deletedAt             DateTime?              @db.Timestamptz()
+  studentDocumentMedias StudentDocumentMedia[]
+}
+
+model StudentDocumentMedia {
+  id Int @id @default(autoincrement())
+
+  studentId  Int
+  Student    Student       @relation(fields: [studentId], references: [id])
+  documentId Int
+  Document   DocumentTitle @relation(fields: [documentId], references: [id])
+
+  mediaType String
+  fileKey   String
+  isActive  Boolean @default(false)
+  isDeleted Boolean @default(false)
   createdBy Int
   updatedBy Int?
   deletedBy Int?
@@ -275,6 +299,7 @@ model StudentApplication {
   applicationStatus           String
   applicationIntake           String
   applicationTargetUniversity String
+  applicationTargetCourses    String[]
   applicationTutionFee        Float
   tutionFeeCurrency           String
 
@@ -300,8 +325,8 @@ model StudentApplication {
   managerId Int?
   Manager   User? @relation("ApplicationManager", fields: [managerId], references: [id])
 
-  counselorId Int?
-  Counselor   User? @relation("Counselor", fields: [counselorId], references: [id])
+  // counselorId Int?
+  // Counselor   User? @relation("Counselor", fields: [counselorId], references: [id])
 
   admissionOfficerId Int?
   AdmissionOfficer   User? @relation("AdmissionTeamOfficer", fields: [admissionOfficerId], references: [id])
@@ -314,9 +339,7 @@ model StudentApplication {
   updatedAt DateTime  @updatedAt @db.Timestamptz()
   deletedAt DateTime? @db.Timestamptz()
 
-  studentApplicationTeams StudentApplicationTeam[]
-
-  applicationDocuments      ApplicationDocument[]
+  studentApplicationTeams   StudentApplicationTeam[]
   studentApplicationRemarks StudentApplicationRemarks[]
 }
 
@@ -331,7 +354,8 @@ model StudentApplicationTeam {
   designation String //branch manager or admission team officer // or counselors.
   memberName  String
 
-  isActive Boolean @default(false)
+  isActive  Boolean @default(false)
+  isDeleted Boolean @default(false)
 
   createdBy Int
   updatedBy Int?
@@ -339,51 +363,6 @@ model StudentApplicationTeam {
 
   //refers to assigned At.
   // FIX: added @default(now()) and @db.Timestamptz() for consistency
-  createdAt DateTime  @default(now()) @db.Timestamptz()
-  updatedAt DateTime  @updatedAt @db.Timestamptz()
-  deletedAt DateTime? @db.Timestamptz()
-}
-
-model ApplicationDocument {
-  id           Int    @id @default(autoincrement())
-  documentType String
-  quantity     Float  @default(1)
-
-  isActive Boolean @default(false)
-
-  // FIX: added missing relation to StudentApplication — previously this table
-  // had no way to know which application a document belonged to.
-  applicationId Int
-  Application   StudentApplication @relation(fields: [applicationId], references: [id])
-
-  createdBy Int
-  updatedBy Int?
-  deletedBy Int?
-
-  createdAt DateTime  @default(now()) @db.Timestamptz()
-  updatedAt DateTime  @updatedAt @db.Timestamptz()
-  deletedAt DateTime? @db.Timestamptz()
-
-  // FIX: added back-relation so media files can be linked to a document
-  applicationDocumentMedia ApplicationDocumentMedia[]
-}
-
-model ApplicationDocumentMedia {
-  id Int @id @default(autoincrement())
-
-  isActive         Boolean @default(false)
-  documentUrl      String
-  documentFileType String  @default("")
-
-  // FIX: added missing relation to ApplicationDocument — one document can have
-  // many media/files (e.g. multiple pages/scans of the same document)
-  documentId Int
-  Document   ApplicationDocument @relation(fields: [documentId], references: [id])
-
-  createdBy Int
-  updatedBy Int?
-  deletedBy Int?
-
   createdAt DateTime  @default(now()) @db.Timestamptz()
   updatedAt DateTime  @updatedAt @db.Timestamptz()
   deletedAt DateTime? @db.Timestamptz()
@@ -399,7 +378,8 @@ model StudentApplicationRemarks {
   applicationId Int
   Application   StudentApplication @relation(fields: [applicationId], references: [id])
 
-  createdBy Int
+  authorId  Int
+  Author    User @relation(fields: [authorId], references: [id])
   updatedBy Int?
   deletedBy Int?
 

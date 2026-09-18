@@ -6,6 +6,7 @@ import {
   getBranchManagersByBusiness,
   registerBusiness,
   getUsersByBusiness,
+  getAdmissionTeamByBusiness,
 } from "../controllers/business.controller.js";
 
 const businessRouter = express.Router();
@@ -29,6 +30,18 @@ businessRouter.get(
   authMiddleware,
   verifyRole([UserRoles["Business Admin"], UserRoles["Manager"]]),
   getUsersByBusiness,
+);
+
+businessRouter.get(
+  "/admission-team/:businessId",
+  authMiddleware,
+  verifyRole([
+    UserRoles["Super Admin"],
+    UserRoles["Business Admin"],
+    UserRoles["Manager"],
+    UserRoles["Counselor"],
+  ]),
+  getAdmissionTeamByBusiness,
 );
 
 export default businessRouter;

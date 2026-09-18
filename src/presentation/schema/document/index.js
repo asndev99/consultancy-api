@@ -46,4 +46,16 @@ export default {
     },
     additionalProperties: false,
   },
+  UploadStudentDocumentMediaSchema: {
+    $id: "https://example.com/schemas/upload-student-document-media.json",
+    type: "object",
+    properties: {
+      documentId: {
+        type: "integer",
+        minimum: 1,
+      },
+    },
+    required: ["documentId"],
+    additionalProperties: false,
+  },
 };

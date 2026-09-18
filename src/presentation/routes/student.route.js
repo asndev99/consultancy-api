@@ -6,9 +6,11 @@ import { validateBody } from "../../middleware/validate.payload.middleware.js";
 import studentSchemas from "../schema/student/index.js";
 import {
   createStudent,
+  editStudent,
+  assignStudentCounselor,
   getStudentsByBranch,
   getTargetUniversities,
-  addTargetUniversities,
+  updateTargetUniversities,
   addTargetUniversityCourses,
   deleteTargetUniversity,
   deleteTargetUniversityCourse,
@@ -19,6 +21,11 @@ const studentRouter = express.Router();
 const manageStudentRoles = [
   UserRoles["Sub Agent"],
   UserRoles["Counselor"],
+  UserRoles["Manager"],
+  UserRoles["Business Admin"],
+];
+
+const manageStudentRecordRoles = [
   UserRoles["Manager"],
   UserRoles["Business Admin"],
 ];
@@ -38,6 +45,23 @@ studentRouter.get(
   getStudentsByBranch,
 );
 
+// Registered before "/:studentId" so "counselor" isn't matched as a studentId param.
+studentRouter.patch(
+  "/counselor",
+  authMiddleware,
+  verifyRole(manageStudentRecordRoles),
+  validateBody(studentSchemas.AssignStudentCounselorSchema),
+  assignStudentCounselor,
+);
+
+studentRouter.patch(
+  "/:studentId",
+  authMiddleware,
+  verifyRole(manageStudentRecordRoles),
+  validateBody(studentSchemas.EditStudentSchema),
+  editStudent,
+);
+
 studentRouter.get(
   "/:studentId/target-universities",
   authMiddleware,
@@ -45,12 +69,12 @@ studentRouter.get(
   getTargetUniversities,
 );
 
-studentRouter.post(
+studentRouter.patch(
   "/:studentId/target-universities",
   authMiddleware,
   verifyRole(manageStudentRoles),
-  validateBody(studentSchemas.AddTargetUniversitiesSchema),
-  addTargetUniversities,
+  validateBody(studentSchemas.UpdateTargetUniversitiesSchema),
+  updateTargetUniversities,
 );
 
 studentRouter.post(
