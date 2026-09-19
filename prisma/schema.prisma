@@ -36,6 +36,7 @@ model Business {
   UserBranches        UserBranch[]
   students            Student[]
   branches            Branch[]
+  leadForms           LeadForms[]
 }
 
 model Branch {
@@ -72,6 +73,7 @@ model Branch {
   users               User[]
   studentApplications StudentApplication[]
   students            Student[]
+  leadForms           LeadForms[]
 }
 
 model User {
@@ -174,6 +176,11 @@ model Student {
   targetDegree             String?
   leadStage                LeadStage @default(NewLead)
 
+  leadSource     String?
+  isFromLeadForm Boolean    @default(false)
+  leadFormId     Int?
+  LeadForm       LeadForms? @relation(fields: [leadFormId], references: [id])
+
   status String?
 
   businessId Int
@@ -182,11 +189,11 @@ model Student {
   branchId Int
   Branch   Branch @relation(fields: [branchId], references: [id])
 
-  counselorId Int? // it means counselor assigned.
+  counselorId Int?
   Counselor   User? @relation(fields: [counselorId], references: [id])
 
   previousBranch       String?
-  studentTransferredAt DateTime? //when branch is changed.
+  studentTransferredAt DateTime?
 
   isActive  Boolean @default(false)
   isDeleted Boolean @default(false)
@@ -195,10 +202,10 @@ model Student {
   updatedBy Int?
   deletedBy Int?
 
-  // FIX: added @default(now())
-  createdAt             DateTime               @default(now()) @db.Timestamptz()
-  updatedAt             DateTime               @updatedAt @db.Timestamptz()
-  deletedAt             DateTime?              @db.Timestamptz()
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+
   studentApplications   StudentApplication[]
   targetUniversities    TargetUniversity[]
   documentTitles        DocumentTitle[]
@@ -371,10 +378,7 @@ model StudentApplicationTeam {
 model StudentApplicationRemarks {
   id Int @id @default(autoincrement())
 
-  comment String?
-
-  // FIX: added missing relation to StudentApplication — previously remarks
-  // weren't linked to any application at all.
+  comment       String?
   applicationId Int
   Application   StudentApplication @relation(fields: [applicationId], references: [id])
 
@@ -383,7 +387,6 @@ model StudentApplicationRemarks {
   updatedBy Int?
   deletedBy Int?
 
-  // FIX: added @default(now()) and @db.Timestamptz() for consistency
   createdAt DateTime  @default(now()) @db.Timestamptz()
   updatedAt DateTime  @updatedAt @db.Timestamptz()
   deletedAt DateTime? @db.Timestamptz()
@@ -490,6 +493,76 @@ model UniversityIntakeDate {
   updatedAt    DateTime  @updatedAt @db.Timestamptz()
   deletedAt    DateTime? @db.Timestamptz()
   universityId Int?
+}
+
+enum LeadFormType {
+  ORG_LEVEL
+  BRANCH_LEVEL
+}
+
+model LeadForms {
+  id        Int     @id @default(autoincrement())
+  publicId  String  @unique @default(cuid()) // used in shareable URL: ?formId=xxx
+  name      String // "UK Universities 2026 Intake"
+  utmSource String? // "Facebook Ads"
+
+  type LeadFormType
+
+  businessId Int
+  Business   Business @relation(fields: [businessId], references: [id])
+
+  branchId Int?
+  Branch   Branch? @relation(fields: [branchId], references: [id])
+
+  targetDegreeLevel String
+  targetCountries   String[]
+  totalSubmissions  Int      @default(0)
+
+  isActive  Boolean @default(false)
+  isDeleted Boolean @default(false)
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt       DateTime          @default(now()) @db.Timestamptz()
+  updatedAt       DateTime          @updatedAt @db.Timestamptz()
+  deletedAt       DateTime?         @db.Timestamptz()
+  leadSubmissions LeadSubmissions[]
+  students        Student[]
+}
+
+//lead will go into this form when lead form type is ORG_LEVEL
+//if lead type is BRANCH_LEVEL then the lead submission will go into student and student
+model LeadSubmissions {
+  id     Int       @id @default(autoincrement())
+  formId Int
+  Form   LeadForms @relation(fields: [formId], references: [id])
+
+  //fields needed to make student.
+  fullName String
+  email    String
+  phoneNo  String
+
+  preferredTargetCountries String[] @default([])
+  targetDegreeLevel        String?
+  additionalNotes          String?
+
+  leadSource String? // copied from LeadForm.utmSource at submit time
+
+  syncStatus   Boolean @default(false)
+  failedReason String?
+
+  isTransferred         Boolean @default(false)
+  transferredBranchName String?
+
+  createdBy Int?
+  updatedBy Int?
+  deletedBy Int?
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
 }
 
 // model Sessions {

@@ -2156,6 +2156,241 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Student application not found
+  /lead-form:
+    get:
+      tags:
+        - LeadForm
+      summary: Get lead forms for the caller's business
+      description: >-
+        Accessible by Manager and Business Admin. businessId is taken from
+        the authenticated user. branchId is an optional query filter; omit
+        it to get every lead form in the business.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lead forms fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Lead forms fetched
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LeadForm"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+    post:
+      tags:
+        - LeadForm
+      summary: Create a lead form
+      description: >-
+        Accessible by Manager and Business Admin. businessId is taken from
+        the authenticated user, not the request body. branchId is required
+        when type is BRANCH_LEVEL.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - name
+                - targetDegreeLevel
+              properties:
+                branchId:
+                  type: integer
+                  description: Required when type is BRANCH_LEVEL
+                type:
+                  type: string
+                  enum: ["ORG_LEVEL", "BRANCH_LEVEL"]
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                utmSource:
+                  type: string
+                  maxLength: 150
+                targetDegreeLevel:
+                  type: string
+                  minLength: 1
+                  maxLength: 150
+                targetCountries:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "201":
+          description: Lead form created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Lead form created
+                  data:
+                    $ref: "#/components/schemas/LeadForm"
+        "400":
+          description: Validation failed, or branchId missing for BRANCH_LEVEL
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Business or branch not found
+  /lead-form/public/{publicId}:
+    get:
+      tags:
+        - LeadForm
+      summary: Get a lead form's public fields by publicId
+      description: >-
+        Public endpoint, no authentication required. Only returns name,
+        targetDegreeLevel, and targetCountries, and only for an active,
+        non-deleted form.
+      parameters:
+        - name: publicId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lead form fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Lead form fetched
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      targetDegreeLevel:
+                        type: string
+                      targetCountries:
+                        type: array
+                        items:
+                          type: string
+        "404":
+          description: Lead form not found
+  /lead-form/{leadFormId}:
+    patch:
+      tags:
+        - LeadForm
+      summary: Edit a lead form
+      description: >-
+        Accessible by Manager and Business Admin, scoped to the
+        authenticated user's business. Editable fields are name,
+        targetDegreeLevel, targetCountries, and utmSource. At least one field
+        must be provided.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: leadFormId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                targetDegreeLevel:
+                  type: string
+                  minLength: 1
+                  maxLength: 150
+                targetCountries:
+                  type: array
+                  items:
+                    type: string
+                utmSource:
+                  type: string
+                  maxLength: 150
+      responses:
+        "200":
+          description: Lead form updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Lead form updated
+                  data:
+                    $ref: "#/components/schemas/LeadForm"
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Lead form not found
+    delete:
+      tags:
+        - LeadForm
+      summary: Soft delete a lead form
+      description: >-
+        Accessible by Manager and Business Admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: leadFormId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lead form deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Lead form not found
   /university/add:
     post:
       tags:
@@ -2963,6 +3198,42 @@ components:
               type: string
             role:
               type: string
+    LeadForm:
+      type: object
+      properties:
+        id:
+          type: integer
+        publicId:
+          type: string
+        name:
+          type: string
+        utmSource:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: ["ORG_LEVEL", "BRANCH_LEVEL"]
+        businessId:
+          type: integer
+        branchId:
+          type: integer
+          nullable: true
+        targetDegreeLevel:
+          type: string
+        targetCountries:
+          type: array
+          items:
+            type: string
+        totalSubmissions:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     TargetUniversity:
       type: object
       properties:

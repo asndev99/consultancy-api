@@ -36,3 +36,9 @@ export const LeadStage = {
   VisaProcessing: "VisaProcessing",
   Enrolled: "Enrolled",
 };
+
+// Mirrors the Prisma LeadFormType enum on LeadForms.
+export const LeadFormType = {
+  ORG_LEVEL: "ORG_LEVEL",
+  BRANCH_LEVEL: "BRANCH_LEVEL",
+};
