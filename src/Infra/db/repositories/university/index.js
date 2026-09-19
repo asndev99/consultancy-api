@@ -15,6 +15,7 @@ import {
   findUniversitiesByBusinessId,
   findUniversityByBusinessId,
   findTargetUniversitiesByBusinessId,
+  findUniversityCoursesByUniversityId,
 } from "./repo.js";
 
 const UniversityRepositoryRaw = {
@@ -34,6 +35,7 @@ const UniversityRepositoryRaw = {
   findUniversitiesByBusinessId,
   findUniversityByBusinessId,
   findTargetUniversitiesByBusinessId,
+  findUniversityCoursesByUniversityId,
 };
 
 const UniversityRepository = new Proxy(UniversityRepositoryRaw, {
