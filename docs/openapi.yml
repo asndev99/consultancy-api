@@ -447,6 +447,51 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden - insufficient permissions
+  /business/admission-team/{businessId}:
+    get:
+      tags:
+        - Business
+      summary: Get the Admission Team users for a business
+      description: >-
+        Accessible by Super Admin, Business Admin, Manager and Counselor.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Admission team fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 1
+                  message:
+                    type: string
+                    example: Admission team fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        email:
+                          type: string
+                          format: email
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
   /branch:
     get:
       tags:
@@ -852,6 +897,161 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Business or branch not found
+  /student/counselor:
+    patch:
+      tags:
+        - Student
+      summary: Assign or reassign one or more students to a counselor
+      description: >-
+        Accessible by Manager and Business Admin. counselorId is required but
+        nullable - pass null to unassign (matches the "Unassigned" option in
+        the Assign Counselor dialog). Same endpoint handles both an initial
+        assignment and a reassignment.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - studentIds
+                - counselorId
+              properties:
+                studentIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: integer
+                counselorId:
+                  type: integer
+                  nullable: true
+                  description: Must reference an active Counselor in the caller's business, or null to unassign
+      responses:
+        "200":
+          description: Student counselor assigned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student counselor assigned
+                  data:
+                    type: object
+                    properties:
+                      studentIds:
+                        type: array
+                        items:
+                          type: integer
+                      counselorId:
+                        type: integer
+                        nullable: true
+        "400":
+          description: Validation failed, or counselorId doesn't reference an active Counselor in this business
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: One or more students were not found
+  /student/{studentId}:
+    patch:
+      tags:
+        - Student
+      summary: Edit a student record's contact details, target countries, and stage
+      description: >-
+        Accessible by Manager and Business Admin. At least one field must be
+        provided.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                fullName:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                phoneNo:
+                  type: string
+                  minLength: 2
+                preferredTargetCountries:
+                  type: array
+                  items:
+                    type: string
+                targetDegree:
+                  type: string
+                leadStage:
+                  type: string
+                  enum:
+                    [
+                      "NewLead",
+                      "DocumentSubmitted",
+                      "ApplicationSubmitted",
+                      "VisaProcessing",
+                      "Enrolled",
+                    ]
+      responses:
+        "200":
+          description: Student updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student updated
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      fullName:
+                        type: string
+                      email:
+                        type: string
+                      phoneNo:
+                        type: string
+                      preferredTargetCountries:
+                        type: array
+                        items:
+                          type: string
+                      targetDegree:
+                        type: string
+                        nullable: true
+                      leadStage:
+                        type: string
+        "400":
+          description: Validation failed, or another student with this email/phone already exists on this branch
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student not found
   /student/branch/{branchId}:
     get:
       tags:
@@ -1006,15 +1206,20 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Student not found
-    post:
+    patch:
       tags:
         - Student
-      summary: Bulk add target universities (with optional initial courses)
+      summary: Update a student's target universities (remove then add)
       description: >-
-        Accessible by Sub Agent, Counselor, Manager and Business Admin.
-        Existing (studentId, universityId) pairs, and existing
-        (targetUniversityId, courseId) pairs for any newly/already added
-        target university, are skipped instead of raising an error.
+        Accessible by Sub Agent, Counselor, Manager and Business Admin. If
+        removedUniversities and/or removedCourses are provided, those are
+        deleted first (removedUniversities entries are targetUniversityId
+        values and cascade-delete their courses; removedCourses entries are
+        targetCourseId values - any already removed via cascade are silently
+        skipped). targetUniversities is then applied the same way the old
+        add endpoint worked: existing (studentId, universityId) pairs, and
+        existing (targetUniversityId, courseId) pairs for any newly/already
+        added target university, are skipped instead of raising an error.
       security:
         - bearerAuth: []
       requestBody:
@@ -1022,27 +1227,45 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              minItems: 1
-              items:
-                type: object
-                required:
-                  - universityId
-                properties:
-                  universityId:
+              type: object
+              required:
+                - targetUniversities
+              properties:
+                targetUniversities:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - universityId
+                    properties:
+                      universityId:
+                        type: integer
+                      courseIds:
+                        type: array
+                        items:
+                          type: integer
+                removedUniversities:
+                  type: array
+                  items:
                     type: integer
-                  courseIds:
-                    type: array
-                    items:
-                      type: integer
+                  description: targetUniversityId values to delete before applying targetUniversities
+                removedCourses:
+                  type: array
+                  items:
+                    type: integer
+                  description: targetCourseId values to delete before applying targetUniversities
               example:
-                - universityId: 101
-                  courseIds: [201, 202]
-                - universityId: 102
-                  courseIds: []
+                targetUniversities:
+                  - universityId: 101
+                    courseIds: [201, 202]
+                  - universityId: 102
+                    courseIds: []
+                removedUniversities: [55]
+                removedCourses: [90]
       responses:
-        "201":
-          description: Target universities added
+        "200":
+          description: Target universities updated
           content:
             application/json:
               schema:
@@ -1053,7 +1276,7 @@ paths:
                     example: 0
                   message:
                     type: string
-                    example: Target universities added
+                    example: Target universities updated
                   data:
                     type: array
                     items:
@@ -1065,7 +1288,7 @@ paths:
         "403":
           description: Forbidden - insufficient permissions
         "404":
-          description: Student not found
+          description: Student, target university, or target course not found
   /student/{studentId}/target-universities/{targetUniversityId}:
     delete:
       tags:
@@ -1364,6 +1587,575 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Document title not found
+  /document/media:
+    post:
+      tags:
+        - Document
+      summary: Upload up to 3 media files for a student document title
+      description: >-
+        Accessible by Manager, Business Admin, Counselor and Sub Agent.
+        studentId is derived from the referenced documentId, not passed
+        directly. Up to 3 files per request, each up to 10MB. fileKey is
+        generated on the server per file; the fetchable path is derived at
+        runtime as {BACKEND_DOMAIN}/public/{fileKey}.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - documentId
+                - files
+              properties:
+                documentId:
+                  type: integer
+                files:
+                  type: array
+                  maxItems: 3
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "201":
+          description: Document media uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Document media uploaded
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StudentDocumentMedia"
+        "400":
+          description: Validation failed, no files, more than 3 files, or a file over 10MB
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Document title not found
+  /document/media/student/{studentId}:
+    get:
+      tags:
+        - Document
+      summary: Get a student's uploaded document media, grouped by document title
+      description: >-
+        Accessible by Manager, Business Admin, Counselor and Sub Agent.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document media fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Document media fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        documentTitle:
+                          type: string
+                        files:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              fileKey:
+                                type: string
+                              filePath:
+                                type: string
+                              mediaType:
+                                type: string
+                              createdAt:
+                                type: string
+                                format: date-time
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student not found
+  /document/media/{mediaId}:
+    patch:
+      tags:
+        - Document
+      summary: Replace the file on an existing student document media record
+      description: >-
+        Accessible by Manager, Business Admin, Counselor and Sub Agent.
+        Exactly 1 file. The previous file on disk is removed and the record's
+        fileKey/mediaType are updated in place.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Document media replaced
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Document media replaced
+                  data:
+                    $ref: "#/components/schemas/StudentDocumentMedia"
+        "400":
+          description: Validation failed, file missing, or file over 10MB
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Document media not found
+    delete:
+      tags:
+        - Document
+      summary: Soft delete a student document media file
+      description: >-
+        Accessible by Manager, Business Admin, Counselor and Sub Agent.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document media deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Document media not found
+  /student-application:
+    post:
+      tags:
+        - StudentApplication
+      summary: Create a student application
+      description: >-
+        Accessible by Manager, Counselor and Business Admin.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - businessId
+                - branchId
+                - studentId
+                - applicationStatus
+                - applicationIntake
+                - applicationTargetUniversity
+                - applicationTutionFee
+              properties:
+                businessId:
+                  type: integer
+                branchId:
+                  type: integer
+                studentId:
+                  type: integer
+                applicationStatus:
+                  type: string
+                  enum:
+                    [
+                      "Draft",
+                      "Under Review",
+                      "Pending Documents",
+                      "Offer Letter Issued",
+                      "Visa Processing",
+                      "Enrolled",
+                      "Rejected",
+                    ]
+                applicationIntake:
+                  type: string
+                  minLength: 2
+                  maxLength: 60
+                applicationTargetUniversity:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                applicationTutionFee:
+                  type: number
+                  minimum: 0
+                tutionFeeCurrency:
+                  type: string
+                  minLength: 1
+                  maxLength: 10
+                  description: Defaults to "N/A" when omitted
+                applicationTargetCourses:
+                  type: array
+                  items:
+                    type: string
+                  description: Defaults to an empty array when omitted
+      responses:
+        "201":
+          description: Student application created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student application created
+                  data:
+                    $ref: "#/components/schemas/StudentApplication"
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Business, Branch or Student not found
+  /student-application/student/{studentId}/branch/{branchId}:
+    get:
+      tags:
+        - StudentApplication
+      summary: Get student applications for a student within a branch
+      description: >-
+        Accessible by Manager, Counselor and Business Admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student applications fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student applications fetched
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StudentApplication"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+  /student-application/{applicationId}/assign:
+    patch:
+      tags:
+        - StudentApplication
+      summary: Assign a student application to a Manager or Admission Team member
+      description: >-
+        Accessible by Manager, Counselor and Business Admin. When role is
+        "Manager", sets managerId/isManagerAssigned/managerAssignedAt. When
+        role is "Admission Team", sets
+        admissionOfficerId/isAdmissionTeamAssigned/admissionTeamAssignedAt.
+        userId must reference a user with a matching role in the same
+        business.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+                - userId
+              properties:
+                role:
+                  type: string
+                  enum: ["Manager", "Admission Team"]
+                userId:
+                  type: integer
+      responses:
+        "200":
+          description: Student application assigned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student application assigned
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      managerId:
+                        type: integer
+                        nullable: true
+                      isManagerAssigned:
+                        type: boolean
+                      managerAssignedAt:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      admissionOfficerId:
+                        type: integer
+                        nullable: true
+                      isAdmissionTeamAssigned:
+                        type: boolean
+                      admissionTeamAssignedAt:
+                        type: string
+                        format: date-time
+                        nullable: true
+        "400":
+          description: Validation failed, or userId's role doesn't match the given role / business
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student application or user not found
+  /student-application/{applicationId}/status:
+    patch:
+      tags:
+        - StudentApplication
+      summary: Update a student application's status
+      description: >-
+        Accessible by Manager, Counselor and Business Admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - applicationStatus
+              properties:
+                applicationStatus:
+                  type: string
+                  enum:
+                    [
+                      "Draft",
+                      "Under Review",
+                      "Pending Documents",
+                      "Offer Letter Issued",
+                      "Visa Processing",
+                      "Enrolled",
+                      "Rejected",
+                    ]
+      responses:
+        "200":
+          description: Student application status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student application status updated
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      applicationStatus:
+                        type: string
+                      updatedAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student application not found
+  /student-application/{applicationId}:
+    get:
+      tags:
+        - StudentApplication
+      summary: Get full details of a student application by its id
+      description: >-
+        Accessible by Manager, Counselor and Business Admin. Includes the
+        student's details, assigned counselor, and the assigned
+        Manager/AdmissionOfficer (name only).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student application fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student application fetched
+                  data:
+                    $ref: "#/components/schemas/StudentApplicationDetails"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student application not found
+    delete:
+      tags:
+        - StudentApplication
+      summary: Soft delete a student application
+      description: >-
+        Accessible by Manager, Counselor and Business Admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student application deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student application not found
+  /student-application/{applicationId}/remarks:
+    get:
+      tags:
+        - StudentApplication
+      summary: Get remarks/notes for a student application
+      description: >-
+        Accessible by Manager, Counselor and Business Admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student application remarks fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student application remarks fetched
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StudentApplicationRemark"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student application not found
   /university/add:
     post:
       tags:
@@ -1729,20 +2521,47 @@ paths:
     get:
       tags:
         - University
-      summary: Search target universities for a student
+      summary: Search target universities/courses for a student, with isSelected
       description: >-
-        Fetches target universities (with their courses) for a student. No
-        pagination. searchTerm matches against university name, country, or
-        any of the university's course titles. If searchTerm is empty or
-        omitted, every university for the authenticated user's business is
-        returned along with its courses.
+        Fetches universities (or, when universityId is given, just that
+        university's courses) for a student, annotating each with isSelected
+        based on the student's current target universities/courses.
+        studentId is required. No pagination.
+
+
+        When universityId is omitted: searches/lists every university in the
+        business (searchTerm matches university name, country, or any course
+        title; empty/omitted searchTerm returns every university). Each
+        university includes its full course list and an isSelected flag on
+        both the university and each course.
+
+
+        When universityId is provided: searchTerm instead matches only that
+        university's course titles, and the response is a bare array of that
+        university's matching courses, each with isSelected. No
+        university-level wrapper is returned in this case.
       security:
         - bearerAuth: []
       parameters:
+        - name: studentId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: universityId
+          in: query
+          required: false
+          description: When provided, restricts the search to this university's courses only
+          schema:
+            type: integer
         - name: searchTerm
           in: query
           required: false
-          description: Optional case-insensitive partial match on university name, country, or course title
+          description: >-
+            Without universityId: case-insensitive partial match on
+            university name, country, or course title. With universityId:
+            case-insensitive partial match on that university's course
+            titles only.
           schema:
             type: string
       responses:
@@ -1760,49 +2579,83 @@ paths:
                     type: string
                     example: Target universities fetched
                   data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                        universityName:
-                          type: string
-                        country:
-                          type: string
-                        link:
-                          type: string
-                        type:
-                          type: string
-                          enum: [Public, Private]
-                        businessId:
-                          type: integer
-                        universityCourses:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              id:
-                                type: integer
-                              courseTitle:
-                                type: string
-                              degreeLevel:
-                                type: string
-                              tutionFee:
-                                type: number
-                              tutionFeeCurrency:
-                                type: string
-                                nullable: true
-                              tutionPeriod:
-                                type: string
-                                nullable: true
-                              courseRequirements:
-                                type: string
-                                nullable: true
+                    oneOf:
+                      - type: array
+                        description: Returned when universityId is omitted
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            universityName:
+                              type: string
+                            country:
+                              type: string
+                            link:
+                              type: string
+                            type:
+                              type: string
+                              enum: [Public, Private]
+                            businessId:
+                              type: integer
+                            isSelected:
+                              type: boolean
+                            universityCourses:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                  courseTitle:
+                                    type: string
+                                  degreeLevel:
+                                    type: string
+                                  tutionFee:
+                                    type: number
+                                  tutionFeeCurrency:
+                                    type: string
+                                    nullable: true
+                                  tutionPeriod:
+                                    type: string
+                                    nullable: true
+                                  courseRequirements:
+                                    type: string
+                                    nullable: true
+                                  isSelected:
+                                    type: boolean
+                      - type: array
+                        description: Returned when universityId is provided
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            courseTitle:
+                              type: string
+                            degreeLevel:
+                              type: string
+                            tutionFee:
+                              type: number
+                            tutionFeeCurrency:
+                              type: string
+                              nullable: true
+                            tutionPeriod:
+                              type: string
+                              nullable: true
+                            courseRequirements:
+                              type: string
+                              nullable: true
+                            isSelected:
+                              type: boolean
+        "400":
+          description: studentId missing
         "401":
           description: Unauthorized
         "403":
           description: Forbidden - insufficient permissions
+        "404":
+          description: Student or university not found
   /university/{universityId}:
     patch:
       tags:
@@ -1937,6 +2790,30 @@ paths:
           description: Forbidden - insufficient permissions
 components:
   schemas:
+    StudentDocumentMedia:
+      type: object
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: integer
+        documentId:
+          type: integer
+        mediaType:
+          type: string
+        fileKey:
+          type: string
+        filePath:
+          type: string
+          description: Derived at runtime as {BACKEND_DOMAIN}/public/{fileKey}
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     DocumentTitle:
       type: object
       properties:
@@ -1957,6 +2834,135 @@ components:
         updatedAt:
           type: string
           format: date-time
+    StudentApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+        applicationStatus:
+          type: string
+        applicationIntake:
+          type: string
+        applicationTargetUniversity:
+          type: string
+        applicationTargetCourses:
+          type: array
+          items:
+            type: string
+        applicationTutionFee:
+          type: number
+        tutionFeeCurrency:
+          type: string
+        applicationSubmittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        isAdmissionTeamAssigned:
+          type: boolean
+        isManagerAssigned:
+          type: boolean
+        Manager:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            email:
+              type: string
+        AdmissionOfficer:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            email:
+              type: string
+    StudentApplicationDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+        applicationStatus:
+          type: string
+        applicationIntake:
+          type: string
+        applicationTargetUniversity:
+          type: string
+        applicationTargetCourses:
+          type: array
+          items:
+            type: string
+        applicationTutionFee:
+          type: number
+        tutionFeeCurrency:
+          type: string
+        applicationSubmittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        isAdmissionTeamAssigned:
+          type: boolean
+        isManagerAssigned:
+          type: boolean
+        Student:
+          type: object
+          properties:
+            fullName:
+              type: string
+            email:
+              type: string
+            phoneNo:
+              type: string
+            targetDegree:
+              type: string
+              nullable: true
+            Counselor:
+              type: object
+              nullable: true
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+                email:
+                  type: string
+        Manager:
+          type: object
+          nullable: true
+          properties:
+            name:
+              type: string
+        AdmissionOfficer:
+          type: object
+          nullable: true
+          properties:
+            name:
+              type: string
+    StudentApplicationRemark:
+      type: object
+      properties:
+        id:
+          type: integer
+        comment:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        Author:
+          type: object
+          properties:
+            name:
+              type: string
+            role:
+              type: string
     TargetUniversity:
       type: object
       properties:

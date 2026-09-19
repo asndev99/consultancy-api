@@ -1,5 +1,6 @@
 import {
   GetManagersByBusiness,
+  GetAdmissionTeamByBusiness,
   getUsersByBusinessId,
   countBusinessUsers,
   FindAssignedBranchesToUserByUserId,
@@ -15,6 +16,7 @@ const BusinessRepositoryRaw = {
   findBusinessByName,
   RegisterBusiness,
   GetManagersByBusiness,
+  GetAdmissionTeamByBusiness,
   FindBusinessById,
   getUsersByBusinessId,
   countBusinessUsers,

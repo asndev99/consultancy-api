@@ -9,6 +9,33 @@ export const createStudent = async (req, res, next) => {
   }
 };
 
+export const editStudent = async (req, res, next) => {
+  try {
+    const data = await StudentUseCases.EditStudentUseCase(
+      req,
+      req.params.studentId,
+      req.body,
+    );
+    res.status(200).json({ code: 0, data, message: "Student updated" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const assignStudentCounselor = async (req, res, next) => {
+  try {
+    const data = await StudentUseCases.AssignStudentCounselorUseCase(
+      req,
+      req.body,
+    );
+    res
+      .status(200)
+      .json({ code: 0, data, message: "Student counselor assigned" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getStudentsByBranch = async (req, res, next) => {
   try {
     const { page, pageSize, counselorId, leadStage, searchTerm } = req.query;
@@ -44,16 +71,16 @@ export const getTargetUniversities = async (req, res, next) => {
   }
 };
 
-export const addTargetUniversities = async (req, res, next) => {
+export const updateTargetUniversities = async (req, res, next) => {
   try {
-    const data = await StudentUseCases.AddTargetUniversitiesUseCase(
+    const data = await StudentUseCases.UpdateTargetUniversitiesUseCase(
       req,
       req.params.studentId,
       req.body,
     );
     res
-      .status(201)
-      .json({ code: 0, data, message: "Target universities added" });
+      .status(200)
+      .json({ code: 0, data, message: "Target universities updated" });
   } catch (error) {
     next(error);
   }

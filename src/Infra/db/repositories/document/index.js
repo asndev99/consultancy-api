@@ -4,6 +4,11 @@ import {
   FindDocumentTitleById,
   UpdateDocumentTitle,
   DeleteDocumentTitle,
+  CreateStudentDocumentMedia,
+  FindStudentDocumentMediaById,
+  FindStudentDocumentMediaByStudentId,
+  UpdateStudentDocumentMedia,
+  DeleteStudentDocumentMedia,
 } from "./repo.js";
 
 const DocumentRawRepository = {
@@ -12,6 +17,11 @@ const DocumentRawRepository = {
   FindDocumentTitleById,
   UpdateDocumentTitle,
   DeleteDocumentTitle,
+  CreateStudentDocumentMedia,
+  FindStudentDocumentMediaById,
+  FindStudentDocumentMediaByStudentId,
+  UpdateStudentDocumentMedia,
+  DeleteStudentDocumentMedia,
 };
 
 const DocumentRepository = new Proxy(DocumentRawRepository, {

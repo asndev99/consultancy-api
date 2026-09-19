@@ -9,6 +9,7 @@ import businessRouter from "./presentation/routes/business.route.js";
 import branchRouter from "./presentation/routes/branch.route.js";
 import studentRouter from "./presentation/routes/student.route.js";
 import documentRouter from "./presentation/routes/document.route.js";
+import studentApplicationRouter from "./presentation/routes/student-application.route.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
@@ -22,6 +23,8 @@ app.use(cors({ origin: "*" }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+app.use("/public", express.static(path.join(__dirname, "..", "public")));
 
 const openApiDocument = YAML.load(
   path.join(__dirname, "..", "docs", "openapi.yml"),
@@ -38,6 +41,7 @@ app.use("/business", businessRouter);
 app.use("/branch", branchRouter);
 app.use("/student", studentRouter);
 app.use("/document", documentRouter);
+app.use("/student-application", studentApplicationRouter);
 
 app.use(errorMiddleware);
 

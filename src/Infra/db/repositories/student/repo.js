@@ -84,6 +84,44 @@ export function FindStudentById(studentId, businessId) {
   });
 }
 
+export function UpdateStudent(studentId, payload, businessId) {
+  return prisma.student.update({
+    where: {
+      id: studentId,
+      // Super Admins have no businessId, so they aren't scoped to one business.
+      ...(businessId != null ? { businessId } : {}),
+    },
+    data: payload,
+  });
+}
+
+export async function FindActiveStudentsByIds(studentIds, businessId) {
+  return prisma.student.findMany({
+    where: {
+      id: { in: studentIds },
+      isDeleted: false,
+      // Super Admins have no businessId, so they aren't scoped to one business.
+      ...(businessId != null ? { businessId } : {}),
+    },
+    select: { id: true },
+  });
+}
+
+export async function BulkUpdateStudentCounselor(
+  studentIds,
+  payload,
+  businessId,
+) {
+  return prisma.student.updateMany({
+    where: {
+      id: { in: studentIds },
+      // Super Admins have no businessId, so they aren't scoped to one business.
+      ...(businessId != null ? { businessId } : {}),
+    },
+    data: payload,
+  });
+}
+
 function targetUniversityInclude() {
   return {
     University: {

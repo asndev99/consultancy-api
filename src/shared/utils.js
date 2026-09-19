@@ -66,3 +66,23 @@ export function generateStudentCode(businessCode, sequence) {
   const paddedNumber = String(sequence).padStart(5, "0");
   return `${businessCode}-STU-${paddedNumber}`;
 }
+
+// Derives a numeric tracking id from businessId/branchId/studentId plus a
+// random suffix. Not guaranteed unique on its own — callers must retry on a
+// unique constraint violation (Prisma error code P2002).
+// Path is derived at runtime from BACKEND_DOMAIN rather than stored, so
+// only fileKey needs to live in the database.
+export function buildFileUrl(fileKey) {
+  const backendDomain = process.env.BACKEND_DOMAIN || "";
+  return `${backendDomain}/public/${fileKey}`;
+}
+
+export function generateApplicationId(businessId, branchId, studentId) {
+  const pad = (value, length) =>
+    String(Math.abs(Number(value) || 0) % 10 ** length).padStart(length, "0");
+  const randomSuffix = Math.floor(10 + Math.random() * 90);
+
+  return Number(
+    `${pad(businessId, 2)}${pad(branchId, 2)}${pad(studentId, 3)}${randomSuffix}`,
+  );
+}

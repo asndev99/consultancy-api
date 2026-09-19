@@ -29,10 +29,11 @@ export const GetUniveristyByBusiness = async (req, res, next) => {
 
 export const getTargetUniversities = async (req, res, next) => {
   try {
-    const { searchTerm } = req.query;
+    const { searchTerm, studentId, universityId } = req.query;
     const data = await UniversityUseCases.GetTargetUniversitiesUseCase(
       req.user.businessId,
-      searchTerm,
+      studentId,
+      { searchTerm, universityId },
     );
     res
       .status(200)

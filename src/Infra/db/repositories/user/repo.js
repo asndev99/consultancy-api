@@ -171,6 +171,24 @@ export async function GetManagersByBusiness(businessId) {
   });
 }
 
+export async function GetAdmissionTeamByBusiness(businessId) {
+  return prisma.user.findMany({
+    where: {
+      isActive: true,
+      businessId: Number(businessId),
+      status: UserStatus.Active,
+      role: UserRoles["Admission Team"],
+      isDeleted: false,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
 export async function DeleteUserByBusiness(updatedBy, userId, businessId) {
   const user = await findUserById(userId);
 

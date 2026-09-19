@@ -25,6 +25,19 @@ export const getBranchManagersByBusiness = async (req, res, next) => {
   }
 };
 
+export const getAdmissionTeamByBusiness = async (req, res, next) => {
+  try {
+    const data = await BusinessUseCases.GetAdmissionTeamByBusinessUseCase(
+      req.params.businessId,
+    );
+    res
+      .status(200)
+      .json({ code: 1, data, message: "Admission team fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getUsersByBusiness = async (req, res, next) => {
   try {
     const { name, branchId, page, pageSize, role, isActive } = req.query;

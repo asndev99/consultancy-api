@@ -113,6 +113,30 @@ export async function findTargetUniversitiesByBusinessId(
   });
 }
 
+export async function findUniversityCoursesByUniversityId(
+  universityId,
+  searchTerm,
+) {
+  const trimmedSearchTerm =
+    typeof searchTerm === "string" ? searchTerm.trim() : "";
+
+  return prisma.universityCourses.findMany({
+    where: {
+      universityId,
+      deletedAt: null,
+      ...(trimmedSearchTerm
+        ? {
+            courseTitle: {
+              contains: trimmedSearchTerm,
+              mode: "insensitive",
+            },
+          }
+        : {}),
+    },
+    orderBy: { courseTitle: "asc" },
+  });
+}
+
 export async function findUniversitiesByBusinessId(
   businessId,
   page = 1,

@@ -33,3 +33,46 @@ export function DeleteDocumentTitle(documentTitleId, payload) {
     data: payload,
   });
 }
+
+export async function CreateStudentDocumentMedia(payload) {
+  return prisma.studentDocumentMedia.create({
+    data: payload,
+  });
+}
+
+export function FindStudentDocumentMediaById(mediaId) {
+  return prisma.studentDocumentMedia.findFirst({
+    where: { id: mediaId, isDeleted: false },
+  });
+}
+
+export async function FindStudentDocumentMediaByStudentId(studentId) {
+  return prisma.studentDocumentMedia.findMany({
+    where: { studentId, isDeleted: false },
+    select: {
+      id: true,
+      fileKey: true,
+      mediaType: true,
+      createdAt: true,
+      Document: {
+        select: { documentTitle: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export function UpdateStudentDocumentMedia(mediaId, payload) {
+  return prisma.studentDocumentMedia.update({
+    where: { id: mediaId },
+    data: payload,
+  });
+}
+
+// soft delete.
+export function DeleteStudentDocumentMedia(mediaId, payload) {
+  return prisma.studentDocumentMedia.update({
+    where: { id: mediaId },
+    data: payload,
+  });
+}
