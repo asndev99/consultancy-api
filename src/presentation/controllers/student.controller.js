@@ -36,6 +36,19 @@ export const assignStudentCounselor = async (req, res, next) => {
   }
 };
 
+export const getStudentById = async (req, res, next) => {
+  try {
+    const data = await StudentUseCases.GetStudentByIdUseCase(
+      req,
+      req.params.studentId,
+      req.params.branchId,
+    );
+    res.status(200).json({ code: 0, data, message: "Student fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getStudentsByBranch = async (req, res, next) => {
   try {
     const { page, pageSize, counselorId, leadStage, searchTerm } = req.query;
