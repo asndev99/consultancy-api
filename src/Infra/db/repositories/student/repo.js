@@ -84,6 +84,36 @@ export function FindStudentById(studentId, businessId) {
   });
 }
 
+export function FindStudentDetailsByIdAndBranch(
+  studentId,
+  branchId,
+  businessId,
+) {
+  return prisma.student.findFirst({
+    where: {
+      id: studentId,
+      branchId,
+      isDeleted: false,
+      // Super Admins have no businessId, so they aren't scoped to one business.
+      ...(businessId != null ? { businessId } : {}),
+    },
+    select: {
+      fullName: true,
+      email: true,
+      phoneNo: true,
+      preferredTargetCountries: true,
+      targetDegree: true,
+      leadStage: true,
+      Counselor: {
+        select: { id: true, name: true, email: true },
+      },
+      Branch: {
+        select: { id: true, name: true },
+      },
+    },
+  });
+}
+
 export function UpdateStudent(studentId, payload, businessId) {
   return prisma.student.update({
     where: {
@@ -132,7 +162,7 @@ function targetUniversityInclude() {
       },
     },
     targetCourses: {
-      where: { isDeleted: false },
+      where: { deletedAt: null },
       include: { Course: true },
     },
   };
@@ -188,7 +218,7 @@ export async function CreateTargetCourses(data) {
 
 export function FindTargetCourseById(targetCourseId) {
   return prisma.targetCourse.findFirst({
-    where: { id: targetCourseId, isDeleted: false },
+    where: { id: targetCourseId, deletedAt: null },
   });
 }
 

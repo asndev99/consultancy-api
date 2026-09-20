@@ -9,6 +9,7 @@ import {
   editStudent,
   assignStudentCounselor,
   getStudentsByBranch,
+  getStudentById,
   getTargetUniversities,
   updateTargetUniversities,
   addTargetUniversityCourses,
@@ -43,6 +44,13 @@ studentRouter.get(
   authMiddleware,
   verifyRole(manageStudentRoles),
   getStudentsByBranch,
+);
+
+studentRouter.get(
+  "/:studentId/branch/:branchId",
+  authMiddleware,
+  verifyRole(manageStudentRoles),
+  getStudentById,
 );
 
 // Registered before "/:studentId" so "counselor" isn't matched as a studentId param.
