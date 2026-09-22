@@ -1145,6 +1145,14 @@ paths:
                         counselorId:
                           type: integer
                           nullable: true
+                        Counselor:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
                         isActive:
                           type: boolean
                   pagination:
