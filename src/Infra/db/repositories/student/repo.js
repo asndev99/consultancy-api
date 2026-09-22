@@ -43,6 +43,9 @@ export async function FindStudentsByBusinessBranch(
       leadStage,
       searchTerm,
     }),
+    include: {
+      Counselor: { select: { id: true, name: true } },
+    },
     orderBy: { createdAt: "desc" },
     skip,
     take,

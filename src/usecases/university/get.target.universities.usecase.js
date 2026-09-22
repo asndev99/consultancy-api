@@ -45,7 +45,10 @@ export async function GetTargetUniversitiesUseCase(
     const university = await UniversityRepository.findUniversityById(
       Number(universityId),
     );
-    if (!university || (businessId != null && university.businessId !== +businessId)) {
+    if (
+      !university ||
+      (businessId != null && university.businessId !== +businessId)
+    ) {
       throw new NotFoundException("University not found");
     }
 
