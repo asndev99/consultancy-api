@@ -3050,10 +3050,12 @@ paths:
         university-level wrapper is returned in this case.
 
 
-        When isSelected is true, the item also includes the underlying
-        TargetUniversity/TargetCourse row id(s) (targetUniversityId and/or
-        targetCourseId) so it can be used directly against the
-        target-universities update/delete endpoints.
+        The underlying TargetUniversity/TargetCourse row id(s) are included
+        so the item can be used directly against the target-universities
+        update/delete endpoints: targetUniversityId is present whenever that
+        university is one of the student's targets (even if a given course
+        under it isn't individually selected), and targetCourseId is present
+        only when isSelected is true for that course.
 
 
         Each course includes its non-deleted universityIntakeDates.
@@ -3185,7 +3187,10 @@ paths:
                               type: boolean
                             targetUniversityId:
                               type: integer
-                              description: Present only when isSelected is true
+                              description: >-
+                                Present whenever this university is one of
+                                the student's targets, regardless of whether
+                                this particular course is selected
                             targetCourseId:
                               type: integer
                               description: Present only when isSelected is true

@@ -74,7 +74,8 @@ export async function GetTargetUniversitiesUseCase(
       return {
         ...course,
         isSelected,
-        ...(isSelected ? { targetUniversityId, targetCourseId } : {}),
+        ...(targetUniversityId != null ? { targetUniversityId } : {}),
+        ...(isSelected ? { targetCourseId } : {}),
       };
     });
   }
