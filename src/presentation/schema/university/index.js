@@ -157,6 +157,20 @@ export default {
       isActive: {
         type: "boolean",
       },
+      intakeDates: {
+        type: "array",
+        items: {
+          type: "string",
+          format: "date",
+        },
+      },
+      removedIntakeDates: {
+        type: "array",
+        items: {
+          type: "integer",
+          minimum: 1,
+        },
+      },
     },
     additionalProperties: false,
   },

@@ -8,8 +8,10 @@ import {
   createLeadForm,
   getLeadForms,
   editLeadForm,
+  updateLeadFormStatus,
   deleteLeadForm,
   getPublicLeadForm,
+  getLeadFormSubmissions,
 } from "../controllers/lead-form.controller.js";
 
 const leadFormRouter = express.Router();
@@ -46,6 +48,21 @@ leadFormRouter.patch(
   verifyRole(manageLeadFormRoles),
   validateBody(leadFormSchemas.EditLeadFormSchema),
   editLeadForm,
+);
+
+leadFormRouter.patch(
+  "/:leadFormId/status",
+  authMiddleware,
+  verifyRole(manageLeadFormRoles),
+  validateBody(leadFormSchemas.UpdateLeadFormStatusSchema),
+  updateLeadFormStatus,
+);
+
+leadFormRouter.get(
+  "/:leadFormId/submissions",
+  authMiddleware,
+  verifyRole(manageLeadFormRoles),
+  getLeadFormSubmissions,
 );
 
 leadFormRouter.delete(

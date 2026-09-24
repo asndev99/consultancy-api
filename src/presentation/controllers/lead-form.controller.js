@@ -34,6 +34,35 @@ export const editLeadForm = async (req, res, next) => {
   }
 };
 
+export const updateLeadFormStatus = async (req, res, next) => {
+  try {
+    const data = await LeadFormUseCases.UpdateLeadFormStatusUseCase(
+      req,
+      req.params.leadFormId,
+      req.body.isActive,
+    );
+    res
+      .status(200)
+      .json({ code: 0, data, message: "Lead form status updated" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getLeadFormSubmissions = async (req, res, next) => {
+  try {
+    const data = await LeadFormUseCases.GetLeadFormSubmissionsUseCase(
+      req,
+      req.params.leadFormId,
+    );
+    res
+      .status(200)
+      .json({ code: 0, data, message: "Lead form submissions fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteLeadForm = async (req, res, next) => {
   try {
     const data = await LeadFormUseCases.DeleteLeadFormUseCase(

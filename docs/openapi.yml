@@ -1084,7 +1084,9 @@ paths:
         - name: counselorId
           in: query
           required: false
-          description: Optional filter by assigned counselor
+          description: >-
+            Optional filter by assigned counselor. Pass 0 to get only
+            students that have no counselor assigned.
           schema:
             type: integer
         - name: leadStage
@@ -1168,6 +1170,61 @@ paths:
                         type: integer
         "400":
           description: Validation failed - missing branchId or invalid leadStage
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+  /student/branch/{branchId}/stats:
+    get:
+      tags:
+        - Student
+      summary: Get total student count and a count per status for a branch
+      description: >-
+        Accessible by Sub Agent, Counselor, Manager and Business Admin.
+        Scoped by the authenticated user's businessId and the branchId path
+        param together.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student stats fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student stats fetched
+                  data:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      countsByStatus:
+                        type: object
+                        properties:
+                          NewLead:
+                            type: integer
+                          DocumentSubmitted:
+                            type: integer
+                          ApplicationSubmitted:
+                            type: integer
+                          VisaProcessing:
+                            type: integer
+                          Enrolled:
+                            type: integer
+        "400":
+          description: Validation failed - missing branchId
         "401":
           description: Unauthorized
         "403":
@@ -2484,6 +2541,110 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Lead form not found
+  /lead-form/{leadFormId}/status:
+    patch:
+      tags:
+        - LeadForm
+      summary: Activate or deactivate a lead form
+      description: >-
+        Accessible by Manager and Business Admin, scoped to the
+        authenticated user's business.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: leadFormId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isActive
+              properties:
+                isActive:
+                  type: boolean
+      responses:
+        "200":
+          description: Lead form status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Lead form status updated
+                  data:
+                    $ref: "#/components/schemas/LeadForm"
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Lead form not found
+  /lead-form/{leadFormId}/submissions:
+    get:
+      tags:
+        - LeadForm
+      summary: Get submissions for a lead form
+      description: >-
+        Accessible by Manager and Business Admin, scoped to the
+        authenticated user's business. Only name, email, phone, and
+        createdAt are returned for each submission - internal fields such as
+        syncStatus and failedReason are read from the database but never
+        sent to the frontend.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: leadFormId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lead form submissions fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Lead form submissions fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        phone:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Lead form not found
   /university/add:
     post:
       tags:
@@ -2587,6 +2748,11 @@ paths:
       tags:
         - University
       summary: Update a university course
+      description: >-
+        intakeDates and removedIntakeDates are both optional. When
+        intakeDates is given, a new UniversityIntakeDate row is created for
+        each date. When removedIntakeDates is given, the UniversityIntakeDate
+        rows with those ids (belonging to this course) are soft deleted.
       security:
         - bearerAuth: []
       parameters:
@@ -2616,6 +2782,19 @@ paths:
                   type: string
                 isActive:
                   type: boolean
+                intakeDates:
+                  type: array
+                  description: Optional. New intake dates to create for this course.
+                  items:
+                    type: string
+                    format: date
+                removedIntakeDates:
+                  type: array
+                  description: >-
+                    Optional. Ids of existing UniversityIntakeDate rows
+                    (belonging to this course) to soft delete.
+                  items:
+                    type: integer
       responses:
         "200":
           description: Course updated
@@ -2868,6 +3047,15 @@ paths:
         university's course titles, and the response is a bare array of that
         university's matching courses, each with isSelected. No
         university-level wrapper is returned in this case.
+
+
+        When isSelected is true, the item also includes the underlying
+        TargetUniversity/TargetCourse row id(s) (targetUniversityId and/or
+        targetCourseId) so it can be used directly against the
+        target-universities update/delete endpoints.
+
+
+        Each course includes its non-deleted universityIntakeDates.
       security:
         - bearerAuth: []
       parameters:
@@ -2928,6 +3116,9 @@ paths:
                               type: integer
                             isSelected:
                               type: boolean
+                            targetUniversityId:
+                              type: integer
+                              description: Present only when isSelected is true
                             universityCourses:
                               type: array
                               items:
@@ -2952,6 +3143,21 @@ paths:
                                     nullable: true
                                   isSelected:
                                     type: boolean
+                                  targetCourseId:
+                                    type: integer
+                                    description: Present only when isSelected is true
+                                  universityIntakeDates:
+                                    type: array
+                                    items:
+                                      type: object
+                                      properties:
+                                        id:
+                                          type: integer
+                                        date:
+                                          type: string
+                                          format: date
+                                        isActive:
+                                          type: boolean
                       - type: array
                         description: Returned when universityId is provided
                         items:
@@ -2976,6 +3182,24 @@ paths:
                               nullable: true
                             isSelected:
                               type: boolean
+                            targetUniversityId:
+                              type: integer
+                              description: Present only when isSelected is true
+                            targetCourseId:
+                              type: integer
+                              description: Present only when isSelected is true
+                            universityIntakeDates:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  id:
+                                    type: integer
+                                  date:
+                                    type: string
+                                    format: date
+                                  isActive:
+                                    type: boolean
         "400":
           description: studentId missing
         "401":

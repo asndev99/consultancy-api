@@ -8,7 +8,12 @@ function buildStudentListWhere(businessId, branchId, filters = {}) {
     isDeleted: false,
     // Super Admins have no businessId, so they aren't scoped to one business.
     ...(businessId != null ? { businessId } : {}),
-    ...(counselorId != null ? { counselorId } : {}),
+    // counselorId 0 means "not assigned to any counselor".
+    ...(counselorId === 0
+      ? { counselorId: null }
+      : counselorId != null
+        ? { counselorId }
+        : {}),
     ...(leadStage ? { leadStage } : {}),
     ...(searchTerm
       ? {
@@ -49,6 +54,19 @@ export async function FindStudentsByBusinessBranch(
     orderBy: { createdAt: "desc" },
     skip,
     take,
+  });
+}
+
+export async function CountStudentsByStatusForBranch(businessId, branchId) {
+  return prisma.student.groupBy({
+    by: ["leadStage"],
+    where: {
+      branchId,
+      isDeleted: false,
+      // Super Admins have no businessId, so they aren't scoped to one business.
+      ...(businessId != null ? { businessId } : {}),
+    },
+    _count: { _all: true },
   });
 }
 
