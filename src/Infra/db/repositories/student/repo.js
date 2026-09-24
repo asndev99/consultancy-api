@@ -184,7 +184,13 @@ function targetUniversityInclude() {
     },
     targetCourses: {
       where: { deletedAt: null },
-      include: { Course: true },
+      include: {
+        Course: {
+          include: {
+            universityIntakeDates: { where: { deletedAt: null } },
+          },
+        },
+      },
     },
   };
 }
