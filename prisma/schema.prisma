@@ -518,7 +518,7 @@ model LeadForms {
   targetCountries   String[]
   totalSubmissions  Int      @default(0)
 
-  isActive  Boolean @default(false)
+  isActive  Boolean @default(true)
   isDeleted Boolean @default(false)
 
   createdBy Int

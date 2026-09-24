@@ -30,14 +30,17 @@ export async function GetTargetUniversitiesUseCase(
   const studentTargetUniversities =
     await StudentRepository.FindTargetUniversitiesByStudentId(student.id);
 
-  const selectedUniversityIds = new Set(
-    studentTargetUniversities.map((tu) => tu.universityId),
+  // Maps to the TargetUniversity/TargetCourse row ids (not the underlying
+  // University/Course ids) so selected items can be identified for
+  // update/delete without a further lookup.
+  const targetUniversityIdByUniversityId = new Map(
+    studentTargetUniversities.map((tu) => [tu.universityId, tu.id]),
   );
 
-  const selectedCourseIdsByUniversityId = new Map(
+  const targetCourseIdByCourseIdByUniversityId = new Map(
     studentTargetUniversities.map((tu) => [
       tu.universityId,
-      new Set(tu.targetCourses.map((tc) => tc.courseId)),
+      new Map(tu.targetCourses.map((tc) => [tc.courseId, tc.id])),
     ]),
   );
 
@@ -58,13 +61,22 @@ export async function GetTargetUniversitiesUseCase(
         searchTerm,
       );
 
-    const selectedCourseIds =
-      selectedCourseIdsByUniversityId.get(university.id) ?? new Set();
+    const targetUniversityId = targetUniversityIdByUniversityId.get(
+      university.id,
+    );
+    const targetCourseIdByCourseId =
+      targetCourseIdByCourseIdByUniversityId.get(university.id) ?? new Map();
 
-    return courses.map((course) => ({
-      ...course,
-      isSelected: selectedCourseIds.has(course.id),
-    }));
+    return courses.map((course) => {
+      const targetCourseId = targetCourseIdByCourseId.get(course.id);
+      const isSelected = targetCourseId != null;
+
+      return {
+        ...course,
+        isSelected,
+        ...(isSelected ? { targetUniversityId, targetCourseId } : {}),
+      };
+    });
   }
 
   const universities =
@@ -74,16 +86,27 @@ export async function GetTargetUniversitiesUseCase(
     );
 
   return universities.map(({ universityCourses, ...university }) => {
-    const selectedCourseIds =
-      selectedCourseIdsByUniversityId.get(university.id) ?? new Set();
+    const targetUniversityId = targetUniversityIdByUniversityId.get(
+      university.id,
+    );
+    const isUniversitySelected = targetUniversityId != null;
+    const targetCourseIdByCourseId =
+      targetCourseIdByCourseIdByUniversityId.get(university.id) ?? new Map();
 
     return {
       ...university,
-      isSelected: selectedUniversityIds.has(university.id),
-      universityCourses: universityCourses.map((course) => ({
-        ...course,
-        isSelected: selectedCourseIds.has(course.id),
-      })),
+      isSelected: isUniversitySelected,
+      ...(isUniversitySelected ? { targetUniversityId } : {}),
+      universityCourses: universityCourses.map((course) => {
+        const targetCourseId = targetCourseIdByCourseId.get(course.id);
+        const isSelected = targetCourseId != null;
+
+        return {
+          ...course,
+          isSelected,
+          ...(isSelected ? { targetCourseId } : {}),
+        };
+      }),
     };
   });
 }

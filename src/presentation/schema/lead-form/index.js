@@ -79,4 +79,15 @@ export default {
     },
     additionalProperties: false,
   },
+  UpdateLeadFormStatusSchema: {
+    $id: "https://example.com/schemas/update-lead-form-status.json",
+    type: "object",
+    properties: {
+      isActive: {
+        type: "boolean",
+      },
+    },
+    required: ["isActive"],
+    additionalProperties: false,
+  },
 };

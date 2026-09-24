@@ -4,6 +4,7 @@ import {
   FindLeadForms,
   UpdateLeadForm,
   DeleteLeadForm,
+  FindLeadFormSubmissionsByFormId,
   FindPublicLeadFormByPublicId,
 } from "./repo.js";
 
@@ -13,6 +14,7 @@ const LeadFormRawRepository = {
   FindLeadForms,
   UpdateLeadForm,
   DeleteLeadForm,
+  FindLeadFormSubmissionsByFormId,
   FindPublicLeadFormByPublicId,
 };
 

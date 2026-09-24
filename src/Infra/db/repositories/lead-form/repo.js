@@ -53,6 +53,18 @@ export function DeleteLeadForm(leadFormId, payload, businessId) {
   });
 }
 
+// Selects every column (syncStatus, failedReason, etc. included) - callers
+// decide which fields are safe to expose to the frontend.
+export function FindLeadFormSubmissionsByFormId(formId) {
+  return prisma.leadSubmissions.findMany({
+    where: {
+      formId,
+      deletedAt: null,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export function FindPublicLeadFormByPublicId(publicId) {
   return prisma.leadForms.findFirst({
     where: {

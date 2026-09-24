@@ -107,6 +107,9 @@ export async function findTargetUniversitiesByBusinessId(
     include: {
       universityCourses: {
         where: { deletedAt: null },
+        include: {
+          universityIntakeDates: { where: { deletedAt: null } },
+        },
       },
     },
     orderBy: { universityName: "asc" },
@@ -132,6 +135,9 @@ export async function findUniversityCoursesByUniversityId(
             },
           }
         : {}),
+    },
+    include: {
+      universityIntakeDates: { where: { deletedAt: null } },
     },
     orderBy: { courseTitle: "asc" },
   });
@@ -217,10 +223,45 @@ export async function createUniversityCourse(data) {
   });
 }
 
-export async function updateUniversityCourse(id, data) {
+export async function updateUniversityCourse(
+  id,
+  { intakeDates, removedIntakeDates, ...courseData },
+) {
+  const universityIntakeDatesWrite = {};
+
+  if (Array.isArray(intakeDates) && intakeDates.length > 0) {
+    universityIntakeDatesWrite.create = intakeDates.map((intakeDate) => ({
+      date: intakeDate.date ?? new Date(intakeDate),
+      createdBy: intakeDate.createdBy ?? courseData.updatedBy,
+      universityId: courseData.universityId,
+    }));
+  }
+
+  if (Array.isArray(removedIntakeDates) && removedIntakeDates.length > 0) {
+    universityIntakeDatesWrite.updateMany = {
+      where: {
+        id: { in: removedIntakeDates },
+        courseId: id,
+        deletedAt: null,
+      },
+      data: {
+        deletedAt: new Date(),
+        deletedBy: courseData.updatedBy,
+      },
+    };
+  }
+
   return prisma.universityCourses.update({
     where: { id },
-    data,
+    data: {
+      ...courseData,
+      ...(Object.keys(universityIntakeDatesWrite).length > 0
+        ? { universityIntakeDates: universityIntakeDatesWrite }
+        : {}),
+    },
+    include: {
+      universityIntakeDates: { where: { deletedAt: null } },
+    },
   });
 }
 

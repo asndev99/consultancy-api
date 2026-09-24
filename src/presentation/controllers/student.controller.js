@@ -70,6 +70,18 @@ export const getStudentsByBranch = async (req, res, next) => {
   }
 };
 
+export const getStudentStatsByBranch = async (req, res, next) => {
+  try {
+    const data = await StudentUseCases.GetStudentStatsByBranchUseCase({
+      businessId: req.user.businessId,
+      branchId: req.params.branchId,
+    });
+    res.status(200).json({ code: 0, data, message: "Student stats fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getTargetUniversities = async (req, res, next) => {
   try {
     const data = await StudentUseCases.GetTargetUniversitiesUseCase(

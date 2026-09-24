@@ -17,8 +17,13 @@ export async function EditUniversityCourseUseCase(req) {
     throw new ForBiddenException("Forbidden!");
   }
 
+  const { intakeDates, ...body } = req.body;
+
   return UniversityRepository.updateUniversityCourse(course.id, {
-    ...req.body,
+    ...body,
     updatedBy: req.user.id,
+    ...(Array.isArray(intakeDates) && intakeDates.length > 0
+      ? { intakeDates, universityId: course.universityId }
+      : {}),
   });
 }

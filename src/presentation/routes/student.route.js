@@ -9,6 +9,7 @@ import {
   editStudent,
   assignStudentCounselor,
   getStudentsByBranch,
+  getStudentStatsByBranch,
   getStudentById,
   getTargetUniversities,
   updateTargetUniversities,
@@ -44,6 +45,13 @@ studentRouter.get(
   authMiddleware,
   verifyRole(manageStudentRoles),
   getStudentsByBranch,
+);
+
+studentRouter.get(
+  "/branch/:branchId/stats",
+  authMiddleware,
+  verifyRole(manageStudentRoles),
+  getStudentStatsByBranch,
 );
 
 studentRouter.get(
