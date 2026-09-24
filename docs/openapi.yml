@@ -1323,7 +1323,8 @@ paths:
         Accessible by Sub Agent, Counselor, Manager and Business Admin.
         Returns every non-deleted target university for the student, each
         with its University (including universityRequirements), and its
-        targetCourses (including the referenced UniversityCourses details).
+        targetCourses (including the referenced UniversityCourses details
+        and their non-deleted universityIntakeDates).
       security:
         - bearerAuth: []
       parameters:
@@ -3623,6 +3624,18 @@ components:
                   courseRequirements:
                     type: string
                     nullable: true
+                  universityIntakeDates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        date:
+                          type: string
+                          format: date
+                        isActive:
+                          type: boolean
   securitySchemes:
     bearerAuth:
       type: http
