@@ -2126,13 +2126,15 @@ paths:
     patch:
       tags:
         - StudentApplication
-      summary: Assign a student application to a Manager or Admission Team member
+      summary: Assign a student application to a Manager and/or Admission Team member
       description: >-
-        Accessible by Manager, Counselor and Business Admin. When role is
-        "Manager", sets managerId/isManagerAssigned/managerAssignedAt. When
-        role is "Admission Team", sets
+        Accessible by Manager, Counselor and Business Admin. The body is an
+        array of 1-2 assignments, each role appearing at most once; both are
+        applied in a single update. For role "Manager", sets
+        managerId/isManagerAssigned/managerAssignedAt. For role "Admission
+        Team", sets
         admissionOfficerId/isAdmissionTeamAssigned/admissionTeamAssignedAt.
-        userId must reference a user with a matching role in the same
+        Each userId must reference a user with a matching role in the same
         business.
       security:
         - bearerAuth: []
@@ -2147,16 +2149,25 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - role
-                - userId
-              properties:
-                role:
-                  type: string
-                  enum: ["Manager", "Admission Team"]
-                userId:
-                  type: integer
+              type: array
+              minItems: 1
+              maxItems: 2
+              items:
+                type: object
+                required:
+                  - role
+                  - userId
+                properties:
+                  role:
+                    type: string
+                    enum: ["Manager", "Admission Team"]
+                  userId:
+                    type: integer
+            example:
+              - role: Manager
+                userId: 12
+              - role: Admission Team
+                userId: 27
       responses:
         "200":
           description: Student application assigned
