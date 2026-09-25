@@ -38,6 +38,11 @@ export default {
         type: "number",
         minimum: 0,
       },
+      applicationTutionFeePeriod: {
+        type: "string",
+        minLength: 1,
+        maxLength: 60,
+      },
       tutionFeeCurrency: {
         type: "string",
         minLength: 1,
@@ -60,6 +65,7 @@ export default {
       "applicationIntake",
       "applicationTargetUniversity",
       "applicationTutionFee",
+      "applicationTutionFeePeriod",
     ],
     additionalProperties: false,
   },
