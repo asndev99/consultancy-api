@@ -16,6 +16,7 @@ export const CreateStudentApplicationUseCase = async (req, payload) => {
     applicationIntake,
     applicationTargetUniversity,
     applicationTutionFee,
+    applicationTutionFeePeriod,
     tutionFeeCurrency,
     applicationTargetCourses,
   } = payload;
@@ -44,6 +45,7 @@ export const CreateStudentApplicationUseCase = async (req, payload) => {
     applicationTargetUniversity,
     applicationTargetCourses: applicationTargetCourses ?? [],
     applicationTutionFee,
+    applicationTutionFeePeriod,
     tutionFeeCurrency: tutionFeeCurrency ?? "N/A",
     studentId,
     businessId,

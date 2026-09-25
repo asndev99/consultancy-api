@@ -308,6 +308,7 @@ model StudentApplication {
   applicationTargetUniversity String
   applicationTargetCourses    String[]
   applicationTutionFee        Float
+  applicationTutionFeePeriod  String @default("N/A")
   tutionFeeCurrency           String
 
   applicationSubmittedAt DateTime? @db.Timestamptz()

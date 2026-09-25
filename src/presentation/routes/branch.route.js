@@ -11,6 +11,7 @@ import {
   updateBranchStatus,
   deleteBranch,
   getCounselorsByBranch,
+  getUsersByBranchAndRole,
 } from "../controllers/branch.controller.js";
 
 const branchRouter = express.Router();
@@ -68,6 +69,13 @@ branchRouter.get(
   authMiddleware,
   verifyRole(viewBranchCounselorsRoles),
   getCounselorsByBranch,
+);
+
+branchRouter.get(
+  "/users",
+  authMiddleware,
+  verifyRole(Object.values(UserRoles)),
+  getUsersByBranchAndRole,
 );
 
 export default branchRouter;

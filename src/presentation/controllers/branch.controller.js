@@ -75,3 +75,16 @@ export const getCounselorsByBranch = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getUsersByBranchAndRole = async (req, res, next) => {
+  try {
+    const data = await BranchUseCases.GetUsersByBranchAndRoleUseCase(
+      req,
+      req.query.branchId,
+      req.query.role,
+    );
+    res.status(200).json({ code: 0, data, message: "Users fetched" });
+  } catch (error) {
+    next(error);
+  }
+};

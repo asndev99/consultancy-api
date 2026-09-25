@@ -799,6 +799,64 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Branch not found
+  /branch/users:
+    get:
+      tags:
+        - Branch
+      summary: Get users with a given role assigned to a branch
+      description: >
+        Accessible by every authenticated role. The organization is taken from
+        the authenticated user; the branch must belong to it. Only active users
+        (isActive and status Active) are returned.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: role
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - Manager
+              - Counselor
+              - Admission Team
+              - Sub Agent
+      responses:
+        "200":
+          description: Users fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Users fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+        "400":
+          description: Validation failed - missing/invalid branchId or role
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Branch not found
   /student:
     post:
       tags:
@@ -1952,6 +2010,7 @@ paths:
                 - applicationIntake
                 - applicationTargetUniversity
                 - applicationTutionFee
+                - applicationTutionFeePeriod
               properties:
                 businessId:
                   type: integer
@@ -1982,6 +2041,11 @@ paths:
                 applicationTutionFee:
                   type: number
                   minimum: 0
+                applicationTutionFeePeriod:
+                  type: string
+                  minLength: 1
+                  maxLength: 60
+                  example: Per Year
                 tutionFeeCurrency:
                   type: string
                   minLength: 1
@@ -3409,6 +3473,8 @@ components:
             type: string
         applicationTutionFee:
           type: number
+        applicationTutionFeePeriod:
+          type: string
         tutionFeeCurrency:
           type: string
         applicationSubmittedAt:
@@ -3456,6 +3522,8 @@ components:
             type: string
         applicationTutionFee:
           type: number
+        applicationTutionFeePeriod:
+          type: string
         tutionFeeCurrency:
           type: string
         applicationSubmittedAt:
