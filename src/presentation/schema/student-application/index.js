@@ -71,19 +71,28 @@ export default {
   },
   AssignStudentApplicationSchema: {
     $id: "https://example.com/schemas/assign-student-application.json",
-    type: "object",
-    properties: {
-      role: {
-        type: "string",
-        enum: [UserRoles.Manager, UserRoles["Admission Team"]],
+    type: "array",
+    minItems: 1,
+    maxItems: 2,
+    items: {
+      type: "object",
+      properties: {
+        role: {
+          type: "string",
+          enum: [UserRoles.Manager, UserRoles["Admission Team"]],
+        },
+        userId: {
+          type: "integer",
+          minimum: 1,
+        },
       },
-      userId: {
-        type: "integer",
-        minimum: 1,
-      },
+      required: ["role", "userId"],
+      additionalProperties: false,
     },
-    required: ["role", "userId"],
-    additionalProperties: false,
+    errorMessage: {
+      minItems: "At least one assignment must be provided",
+      maxItems: "At most two assignments can be provided",
+    },
   },
   UpdateStudentApplicationStatusSchema: {
     $id: "https://example.com/schemas/update-student-application-status.json",
