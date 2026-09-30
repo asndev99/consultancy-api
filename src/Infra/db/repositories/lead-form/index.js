@@ -6,6 +6,9 @@ import {
   DeleteLeadForm,
   FindLeadFormSubmissionsByFormId,
   FindPublicLeadFormByPublicId,
+  FindActiveLeadFormByPublicId,
+  CreateLeadSubmission,
+  UpdateLeadSubmission,
 } from "./repo.js";
 
 const LeadFormRawRepository = {
@@ -16,6 +19,9 @@ const LeadFormRawRepository = {
   DeleteLeadForm,
   FindLeadFormSubmissionsByFormId,
   FindPublicLeadFormByPublicId,
+  FindActiveLeadFormByPublicId,
+  CreateLeadSubmission,
+  UpdateLeadSubmission,
 };
 
 const LeadFormRepository = new Proxy(LeadFormRawRepository, {

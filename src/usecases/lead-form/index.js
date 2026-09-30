@@ -5,6 +5,7 @@ import { UpdateLeadFormStatusUseCase } from "./update.lead.form.status.usecase.j
 import { DeleteLeadFormUseCase } from "./delete.lead.form.usecase.js";
 import { GetPublicLeadFormUseCase } from "./get.public.lead.form.usecase.js";
 import { GetLeadFormSubmissionsUseCase } from "./get.lead.form.submissions.usecase.js";
+import { SubmitLeadUseCase } from "./submit.lead.usecase.js";
 
 const LeadFormUseCases = {
   CreateLeadFormUseCase,
@@ -14,6 +15,7 @@ const LeadFormUseCases = {
   DeleteLeadFormUseCase,
   GetPublicLeadFormUseCase,
   GetLeadFormSubmissionsUseCase,
+  SubmitLeadUseCase,
 };
 
 export default LeadFormUseCases;
