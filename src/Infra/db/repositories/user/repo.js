@@ -235,6 +235,30 @@ export async function findUserById(id) {
   return prisma.user.findUnique({ where: { id } });
 }
 
+export async function FindUserProfileById(id) {
+  return prisma.user.findFirst({
+    where: { id, isDeleted: false },
+    // Never expose the password hash.
+    omit: { password: true },
+    include: {
+      Business: {
+        select: { id: true, name: true, businessLogo: true },
+      },
+      Branch: {
+        select: { id: true, name: true },
+      },
+      userBranches: {
+        where: { deletedAt: null },
+        select: {
+          Branch: {
+            select: { id: true, name: true },
+          },
+        },
+      },
+    },
+  });
+}
+
 export async function updateUserById(id, data) {
   return prisma.user.update({ where: { id }, data });
 }

@@ -7,9 +7,11 @@ import studentApplicationSchemas from "../schema/student-application/index.js";
 import {
   createStudentApplication,
   getStudentApplications,
+  getStudentApplicationsByBranch,
   getStudentApplicationDetails,
   getStudentApplicationRemarks,
   assignStudentApplication,
+  editStudentApplication,
   updateStudentApplicationStatus,
   deleteStudentApplication,
 } from "../controllers/student-application.controller.js";
@@ -20,6 +22,11 @@ const manageStudentApplicationRoles = [
   UserRoles["Manager"],
   UserRoles["Counselor"],
   UserRoles["Business Admin"],
+];
+
+const viewStudentApplicationRoles = [
+  ...manageStudentApplicationRoles,
+  UserRoles["Admission Team"],
 ];
 
 studentApplicationRouter.post(
@@ -35,6 +42,13 @@ studentApplicationRouter.get(
   authMiddleware,
   verifyRole(manageStudentApplicationRoles),
   getStudentApplications,
+);
+
+studentApplicationRouter.get(
+  "/branch/:branchId",
+  authMiddleware,
+  verifyRole(viewStudentApplicationRoles),
+  getStudentApplicationsByBranch,
 );
 
 studentApplicationRouter.get(
@@ -65,6 +79,14 @@ studentApplicationRouter.patch(
   verifyRole(manageStudentApplicationRoles),
   validateBody(studentApplicationSchemas.UpdateStudentApplicationStatusSchema),
   updateStudentApplicationStatus,
+);
+
+studentApplicationRouter.patch(
+  "/:applicationId",
+  authMiddleware,
+  verifyRole(manageStudentApplicationRoles),
+  validateBody(studentApplicationSchemas.EditStudentApplicationSchema),
+  editStudentApplication,
 );
 
 studentApplicationRouter.delete(

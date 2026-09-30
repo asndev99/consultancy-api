@@ -1,10 +1,13 @@
 import {
   CreateStudentApplication,
   FindStudentApplicationsByStudentAndBranch,
+  CountStudentApplications,
+  FindStudentApplications,
   FindStudentApplicationById,
   FindStudentApplicationDetailsById,
   FindRemarksByApplicationId,
   AssignStudentApplication,
+  EditStudentApplication,
   UpdateStudentApplicationStatus,
   DeleteStudentApplication,
 } from "./repo.js";
@@ -12,10 +15,13 @@ import {
 const StudentApplicationRawRepository = {
   CreateStudentApplication,
   FindStudentApplicationsByStudentAndBranch,
+  CountStudentApplications,
+  FindStudentApplications,
   FindStudentApplicationById,
   FindStudentApplicationDetailsById,
   FindRemarksByApplicationId,
   AssignStudentApplication,
+  EditStudentApplication,
   UpdateStudentApplicationStatus,
   DeleteStudentApplication,
 };

@@ -56,6 +56,11 @@ export default {
           maxLength: 150,
         },
       },
+      targetCountry: {
+        type: "string",
+        minLength: 2,
+        maxLength: 100,
+      },
     },
     required: [
       "businessId",
@@ -67,6 +72,54 @@ export default {
       "applicationTutionFee",
       "applicationTutionFeePeriod",
     ],
+    additionalProperties: false,
+  },
+  EditStudentApplicationSchema: {
+    $id: "https://example.com/schemas/edit-student-application.json",
+    type: "object",
+    properties: {
+      applicationIntake: {
+        type: "string",
+        minLength: 2,
+        maxLength: 60,
+      },
+      applicationTargetUniversity: {
+        type: "string",
+        minLength: 2,
+        maxLength: 150,
+      },
+      applicationTutionFee: {
+        type: "number",
+        minimum: 0,
+      },
+      applicationTutionFeePeriod: {
+        type: "string",
+        minLength: 1,
+        maxLength: 60,
+      },
+      tutionFeeCurrency: {
+        type: "string",
+        minLength: 1,
+        maxLength: 10,
+      },
+      applicationTargetCourses: {
+        type: "array",
+        items: {
+          type: "string",
+          minLength: 1,
+          maxLength: 150,
+        },
+      },
+      targetCountry: {
+        type: "string",
+        minLength: 2,
+        maxLength: 100,
+      },
+    },
+    minProperties: 1,
+    errorMessage: {
+      minProperties: "At least one field must be provided to update",
+    },
     additionalProperties: false,
   },
   AssignStudentApplicationSchema: {

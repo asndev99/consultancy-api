@@ -7,6 +7,8 @@ import {
   updateUser,
   acceptInvite,
   resendInvite,
+  whoAmI,
+  changePassword,
 } from "../controllers/user.controller.js";
 import { verifyRole } from "../../middleware/verify.role.middleware.js";
 import { UserRoles } from "../../shared/application.constants.js";
@@ -21,6 +23,15 @@ userRouter.post(
   "/accept-invite",
   validateBody(userSchemas.AcceptInviteSchema),
   acceptInvite,
+);
+
+userRouter.get("/whoami", authMiddleware, whoAmI);
+
+userRouter.patch(
+  "/change-password",
+  authMiddleware,
+  validateBody(userSchemas.ChangePasswordSchema),
+  changePassword,
 );
 
 userRouter.post(
