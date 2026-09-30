@@ -1,5 +1,19 @@
 import LeadFormUseCases from "../../usecases/lead-form/index.js";
 
+export const submitLead = async (req, res, next) => {
+  try {
+    const data = await LeadFormUseCases.SubmitLeadUseCase(
+      req.params.publicId,
+      req.body,
+    );
+    res
+      .status(201)
+      .json({ code: 0, data, message: "Your details have been recorded" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createLeadForm = async (req, res, next) => {
   try {
     const data = await LeadFormUseCases.CreateLeadFormUseCase(req, req.body);

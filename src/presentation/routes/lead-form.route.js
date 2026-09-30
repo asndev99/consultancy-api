@@ -12,6 +12,7 @@ import {
   deleteLeadForm,
   getPublicLeadForm,
   getLeadFormSubmissions,
+  submitLead,
 } from "../controllers/lead-form.controller.js";
 
 const leadFormRouter = express.Router();
@@ -24,6 +25,13 @@ const manageLeadFormRoles = [
 // Public: no auth. Fine to serve without a token since only name,
 // targetDegreeLevel, and targetCountries are exposed.
 leadFormRouter.get("/public/:publicId", getPublicLeadForm);
+
+// Public: no auth. The form is resolved from publicId only.
+leadFormRouter.post(
+  "/public/:publicId/submit",
+  validateBody(leadFormSchemas.SubmitLeadSchema),
+  submitLead,
+);
 
 leadFormRouter.post(
   "/",

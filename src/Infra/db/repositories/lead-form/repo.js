@@ -65,6 +65,37 @@ export function FindLeadFormSubmissionsByFormId(formId) {
   });
 }
 
+// Full row (type, businessId, branchId, utmSource, createdBy) for processing
+// a public submission server-side; never return this to the caller as-is.
+export function FindActiveLeadFormByPublicId(publicId) {
+  return prisma.leadForms.findFirst({
+    where: {
+      publicId,
+      isActive: true,
+      isDeleted: false,
+    },
+  });
+}
+
+// Records the submission and bumps the form's counter together.
+export async function CreateLeadSubmission(payload) {
+  const [submission] = await prisma.$transaction([
+    prisma.leadSubmissions.create({ data: payload }),
+    prisma.leadForms.update({
+      where: { id: payload.formId },
+      data: { totalSubmissions: { increment: 1 } },
+    }),
+  ]);
+  return submission;
+}
+
+export function UpdateLeadSubmission(submissionId, payload) {
+  return prisma.leadSubmissions.update({
+    where: { id: submissionId },
+    data: payload,
+  });
+}
+
 export function FindPublicLeadFormByPublicId(publicId) {
   return prisma.leadForms.findFirst({
     where: {
