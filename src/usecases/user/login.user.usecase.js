@@ -68,6 +68,7 @@ export const LoginUserUseCase = async (payload) => {
       role: user.role,
       businessId: user.businessId,
       assignedBranches,
+      name:user.name
     },
     businessName: user.Business?.name ?? null,
     businessLogo: user.Business?.businessLogo ?? null,

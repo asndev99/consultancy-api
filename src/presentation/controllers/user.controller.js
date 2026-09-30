@@ -32,6 +32,30 @@ export const acceptInvite = async (req, res, next) => {
   }
 };
 
+export const whoAmI = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.WhoAmIUseCase(req);
+    res.status(200).json({ code: 0, data, message: "User fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.ChangePasswordUseCase(
+      req,
+      req.body.currentPassword,
+      req.body.newPassword,
+    );
+    res
+      .status(200)
+      .json({ code: 0, data, message: "Password changed successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const resendInvite = async (req, res, next) => {
   try {
     const data = await UserUseCases.ResendInviteUseCase(req, req.body.userId);

@@ -30,6 +30,30 @@ export const getStudentApplications = async (req, res, next) => {
   }
 };
 
+export const getStudentApplicationsByBranch = async (req, res, next) => {
+  try {
+    const { page, limit, managerId, admissionOfficerId } = req.query;
+    const { data, pagination } =
+      await StudentApplicationUseCases.GetStudentApplicationsByBranchUseCase(
+        req,
+        req.params.branchId,
+        {
+          page: page ? Number(page) : undefined,
+          limit: limit ? Number(limit) : undefined,
+        },
+        { managerId, admissionOfficerId },
+      );
+    res.status(200).json({
+      code: 0,
+      data,
+      pagination,
+      message: "Student applications fetched",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getStudentApplicationDetails = async (req, res, next) => {
   try {
     const data =
@@ -71,6 +95,21 @@ export const assignStudentApplication = async (req, res, next) => {
     res
       .status(200)
       .json({ code: 0, data, message: "Student application assigned" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const editStudentApplication = async (req, res, next) => {
+  try {
+    const data = await StudentApplicationUseCases.EditStudentApplicationUseCase(
+      req,
+      req.params.applicationId,
+      req.body,
+    );
+    res
+      .status(200)
+      .json({ code: 0, data, message: "Student application updated" });
   } catch (error) {
     next(error);
   }

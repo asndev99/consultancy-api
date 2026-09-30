@@ -19,6 +19,7 @@ export const CreateStudentApplicationUseCase = async (req, payload) => {
     applicationTutionFeePeriod,
     tutionFeeCurrency,
     applicationTargetCourses,
+    targetCountry,
   } = payload;
 
   const business = await BusinessRepository.FindBusinessById(businessId);
@@ -47,6 +48,7 @@ export const CreateStudentApplicationUseCase = async (req, payload) => {
     applicationTutionFee,
     applicationTutionFeePeriod,
     tutionFeeCurrency: tutionFeeCurrency ?? "N/A",
+    targetCountry: targetCountry ?? null,
     studentId,
     businessId,
     branchId,

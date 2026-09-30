@@ -10,6 +10,7 @@ import branchRouter from "./presentation/routes/branch.route.js";
 import studentRouter from "./presentation/routes/student.route.js";
 import documentRouter from "./presentation/routes/document.route.js";
 import studentApplicationRouter from "./presentation/routes/student-application.route.js";
+import studentApplicationRemarksRouter from "./presentation/routes/student-application-remarks.route.js";
 import leadFormRouter from "./presentation/routes/lead-form.route.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import swaggerUi from "swagger-ui-express";
@@ -43,6 +44,7 @@ app.use("/branch", branchRouter);
 app.use("/student", studentRouter);
 app.use("/document", documentRouter);
 app.use("/student-application", studentApplicationRouter);
+app.use("/student-application-remarks", studentApplicationRemarksRouter);
 app.use("/lead-form", leadFormRouter);
 
 app.use(errorMiddleware);

@@ -70,6 +70,181 @@ paths:
                         type: string
         "401":
           description: Invalid email or password
+  /user/whoami:
+    get:
+      tags:
+        - User
+      summary: Get the authenticated user's profile
+      description: >-
+        Accessible by any authenticated user. The user id is taken from the
+        auth token. Returns all user fields except the password hash, plus the
+        user's business, primary branch and assigned branches.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: User fetched
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      userNo:
+                        type: string
+                      role:
+                        type: string
+                      status:
+                        type: string
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      phoneNumber:
+                        type: string
+                        nullable: true
+                      profileMedia:
+                        type: string
+                        nullable: true
+                      previousEmailAddress:
+                        type: string
+                        nullable: true
+                      backUpEmailAddress:
+                        type: string
+                        nullable: true
+                      businessId:
+                        type: integer
+                        nullable: true
+                      branchId:
+                        type: integer
+                        nullable: true
+                      isEmailVerified:
+                        type: boolean
+                      isActive:
+                        type: boolean
+                      isDeleted:
+                        type: boolean
+                      inviteSentAt:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      inviteAcceptedAt:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      createdBy:
+                        type: integer
+                      updatedBy:
+                        type: integer
+                        nullable: true
+                      deletedBy:
+                        type: integer
+                        nullable: true
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+                      deletedAt:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      Business:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: integer
+                          name:
+                            type: string
+                          businessLogo:
+                            type: string
+                            nullable: true
+                      Branch:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: integer
+                          name:
+                            type: string
+                      assignedBranches:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+  /user/change-password:
+    patch:
+      tags:
+        - User
+      summary: Change the authenticated user's password
+      description: >-
+        Accessible by any authenticated user. The user id is taken from the
+        auth token. The current password must be correct and the new password
+        must differ from it.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - currentPassword
+                - newPassword
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 8
+      responses:
+        "200":
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Password changed successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+        "400":
+          description: >-
+            Validation failed, current password incorrect, new password same
+            as current, or no password set yet
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
   /user/register:
     post:
       tags:
@@ -2056,6 +2231,11 @@ paths:
                   items:
                     type: string
                   description: Defaults to an empty array when omitted
+                targetCountry:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                  description: Optional; stored as null when omitted
       responses:
         "201":
           description: Student application created
@@ -2118,6 +2298,125 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/StudentApplication"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+  /student-application/branch/{branchId}:
+    get:
+      tags:
+        - StudentApplication
+      summary: Get a paginated, role-scoped list of student applications for a branch
+      description: >-
+        Accessible by Manager, Counselor, Business Admin and Admission Team.
+        Always scoped to the branchId path param, the authenticated user's
+        businessId, and active (isActive true, deletedAt null) applications.
+        Counselor sees only applications they created (managerId and
+        admissionOfficerId filters apply). Admission Team sees only
+        applications assigned to them (filters are ignored). Manager and
+        Business Admin see all applications in the branch (filters apply).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: managerId
+          in: query
+          required: false
+          description: Optional filter by assigned manager (Counselor, Manager, Business Admin only)
+          schema:
+            type: integer
+        - name: admissionOfficerId
+          in: query
+          required: false
+          description: Optional filter by assigned admission officer (Counselor, Manager, Business Admin only)
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student applications fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student applications fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        studentId:
+                          type: integer
+                        Student:
+                          type: object
+                          properties:
+                            fullName:
+                              type: string
+                        applicationStatus:
+                          type: string
+                        applicationTargetUniversity:
+                          type: string
+                        applicationTargetCourses:
+                          type: array
+                          items:
+                            type: string
+                        targetCountry:
+                          type: string
+                          nullable: true
+                        applicationIntake:
+                          type: string
+                        Manager:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                        AdmissionOfficer:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      totalPages:
+                        type: integer
+        "400":
+          description: Validation failed - invalid branchId, page, limit, managerId or admissionOfficerId
         "401":
           description: Unauthorized
         "403":
@@ -2289,7 +2588,7 @@ paths:
       description: >-
         Accessible by Manager, Counselor and Business Admin. Includes the
         student's details, assigned counselor, and the assigned
-        Manager/AdmissionOfficer (name only).
+        Manager/AdmissionOfficer (id and name).
       security:
         - bearerAuth: []
       parameters:
@@ -2314,6 +2613,104 @@ paths:
                     example: Student application fetched
                   data:
                     $ref: "#/components/schemas/StudentApplicationDetails"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student application not found
+    patch:
+      tags:
+        - StudentApplication
+      summary: Edit a student application's details
+      description: >-
+        Accessible by Manager, Counselor and Business Admin. Only the fields
+        provided are updated; at least one is required. Status and
+        assignments have their own endpoints.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                applicationIntake:
+                  type: string
+                  minLength: 2
+                  maxLength: 60
+                applicationTargetUniversity:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                applicationTutionFee:
+                  type: number
+                  minimum: 0
+                applicationTutionFeePeriod:
+                  type: string
+                  minLength: 1
+                  maxLength: 60
+                tutionFeeCurrency:
+                  type: string
+                  minLength: 1
+                  maxLength: 10
+                applicationTargetCourses:
+                  type: array
+                  items:
+                    type: string
+                targetCountry:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+      responses:
+        "200":
+          description: Student application updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student application updated
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      applicationIntake:
+                        type: string
+                      applicationTargetUniversity:
+                        type: string
+                      applicationTargetCourses:
+                        type: array
+                        items:
+                          type: string
+                      applicationTutionFee:
+                        type: number
+                      applicationTutionFeePeriod:
+                        type: string
+                      tutionFeeCurrency:
+                        type: string
+                      targetCountry:
+                        type: string
+                        nullable: true
+                      updatedAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Validation failed
         "401":
           description: Unauthorized
         "403":
@@ -2382,6 +2779,154 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Student application not found
+  /student-application-remarks:
+    post:
+      tags:
+        - StudentApplicationRemarks
+      summary: Add a remark to a student application
+      description: >-
+        Accessible by Manager, Counselor, Business Admin and Admission Team.
+        The application must be active and belong to the authenticated user's
+        business. The author is the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - applicationId
+                - comment
+              properties:
+                applicationId:
+                  type: integer
+                  minimum: 1
+                comment:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+      responses:
+        "201":
+          description: Remark created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Remark created
+                  data:
+                    $ref: "#/components/schemas/StudentApplicationRemark"
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student application not found
+  /student-application-remarks/{remarkId}:
+    patch:
+      tags:
+        - StudentApplicationRemarks
+      summary: Update a remark
+      description: >-
+        Accessible by Manager, Counselor, Business Admin and Admission Team.
+        Only the remark's author can update it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: remarkId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - comment
+              properties:
+                comment:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+      responses:
+        "200":
+          description: Remark updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Remark updated
+                  data:
+                    $ref: "#/components/schemas/StudentApplicationRemark"
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions or not the remark's author
+        "404":
+          description: Remark not found
+    delete:
+      tags:
+        - StudentApplicationRemarks
+      summary: Soft delete a remark
+      description: >-
+        Accessible by Manager, Counselor, Business Admin and Admission Team.
+        Only the remark's author can delete it. Sets deletedAt and deletedBy.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: remarkId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Remark deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Remark deleted
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      deletedAt:
+                        type: string
+                        format: date-time
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions or not the remark's author
+        "404":
+          description: Remark not found
   /lead-form:
     get:
       tags:
@@ -3423,6 +3968,30 @@ paths:
           description: Forbidden - insufficient permissions
 components:
   schemas:
+    StudentApplicationRemark:
+      type: object
+      properties:
+        id:
+          type: integer
+        comment:
+          type: string
+        applicationId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        Author:
+          type: object
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
+            role:
+              type: string
     StudentDocumentMedia:
       type: object
       properties:
@@ -3496,6 +4065,9 @@ components:
           type: boolean
         isManagerAssigned:
           type: boolean
+        targetCountry:
+          type: string
+          nullable: true
         Manager:
           type: object
           nullable: true
@@ -3545,9 +4117,14 @@ components:
           type: boolean
         isManagerAssigned:
           type: boolean
+        targetCountry:
+          type: string
+          nullable: true
         Student:
           type: object
           properties:
+            id:
+              type: integer
             fullName:
               type: string
             email:
@@ -3571,12 +4148,16 @@ components:
           type: object
           nullable: true
           properties:
+            id:
+              type: integer
             name:
               type: string
         AdmissionOfficer:
           type: object
           nullable: true
           properties:
+            id:
+              type: integer
             name:
               type: string
     StudentApplicationRemark:

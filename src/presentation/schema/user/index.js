@@ -137,6 +137,28 @@ export default {
     required: ["password"],
     additionalProperties: false,
   },
+  ChangePasswordSchema: {
+    $id: "https://example.com/schemas/change-password.json",
+    type: "object",
+    properties: {
+      currentPassword: {
+        type: "string",
+        minLength: 1,
+        errorMessage: {
+          minLength: "Current password is required",
+        },
+      },
+      newPassword: {
+        type: "string",
+        minLength: 8,
+        errorMessage: {
+          minLength: "New password must be at least 8 characters long",
+        },
+      },
+    },
+    required: ["currentPassword", "newPassword"],
+    additionalProperties: false,
+  },
   ResendInviteSchema: {
     $id: "https://example.com/schemas/resend-invite.json",
     type: "object",

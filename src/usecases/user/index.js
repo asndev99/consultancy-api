@@ -4,6 +4,8 @@ import { DeleteUserByBusinessUseCase } from "./delete.user.usecase.js";
 import { UpdateUserUseCase } from "./update.user.usecase.js";
 import { AcceptInviteUseCase } from "./accept.invite.usecase.js";
 import { ResendInviteUseCase } from "./resend.invite.usecase.js";
+import { WhoAmIUseCase } from "./who.am.i.usecase.js";
+import { ChangePasswordUseCase } from "./change.password.usecase.js";
 
 const UserUseCases = {
   RegisterUserUseCase,
@@ -12,6 +14,8 @@ const UserUseCases = {
   UpdateUserUseCase,
   AcceptInviteUseCase,
   ResendInviteUseCase,
+  WhoAmIUseCase,
+  ChangePasswordUseCase,
 };
 
 export default UserUseCases;

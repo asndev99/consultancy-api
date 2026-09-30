@@ -109,10 +109,11 @@ model User {
   updatedBy Int?
   deletedBy Int?
 
-  inviteAcceptedAt DateTime? @db.Timestamptz()
-  createdAt        DateTime  @default(now()) @db.Timestamptz()
-  updatedAt        DateTime  @updatedAt @db.Timestamptz()
-  deletedAt        DateTime? @db.Timestamptz()
+  inviteAcceptedAt  DateTime? @db.Timestamptz()
+  passwordChangedAt DateTime? @db.Timestamptz() // tokens issued before this are invalid
+  createdAt         DateTime  @default(now()) @db.Timestamptz()
+  updatedAt         DateTime  @updatedAt @db.Timestamptz()
+  deletedAt         DateTime? @db.Timestamptz()
 
   userBranches UserBranch[]
 
@@ -308,13 +309,15 @@ model StudentApplication {
   applicationTargetUniversity String
   applicationTargetCourses    String[]
   applicationTutionFee        Float
-  applicationTutionFeePeriod  String @default("N/A")
+  applicationTutionFeePeriod  String   @default("N/A")
   tutionFeeCurrency           String
 
   applicationSubmittedAt DateTime? @db.Timestamptz()
 
   isAdmissionTeamAssigned Boolean @default(false)
   isManagerAssigned       Boolean @default(false)
+
+  targetCountry String?
 
   managerAssignedAt       DateTime? @db.Timestamptz()
   admissionTeamAssignedAt DateTime? @db.Timestamptz()
