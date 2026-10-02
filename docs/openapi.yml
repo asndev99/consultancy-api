@@ -78,7 +78,9 @@ paths:
       description: >-
         Accessible by any authenticated user. The user id is taken from the
         auth token. Returns all user fields except the password hash, plus the
-        user's business, primary branch and assigned branches.
+        user's business, primary branch and assigned branches. For a Business
+        Admin, assignedBranches is every non-deleted branch of their business
+        (id and name).
       security:
         - bearerAuth: []
       responses:
