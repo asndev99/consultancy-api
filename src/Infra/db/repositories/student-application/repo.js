@@ -163,7 +163,7 @@ export async function FindRemarksByApplicationId(applicationId, businessId) {
       createdAt: true,
       updatedAt: true,
       Author: {
-        select: { name: true, role: true },
+        select: { id: true, name: true, role: true },
       },
     },
     orderBy: { createdAt: "desc" },
