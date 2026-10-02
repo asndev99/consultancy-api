@@ -6,6 +6,7 @@ import { AcceptInviteUseCase } from "./accept.invite.usecase.js";
 import { ResendInviteUseCase } from "./resend.invite.usecase.js";
 import { WhoAmIUseCase } from "./who.am.i.usecase.js";
 import { ChangePasswordUseCase } from "./change.password.usecase.js";
+import { AssignUserBranchUseCase } from "./assign.user.branch.usecase.js";
 
 const UserUseCases = {
   RegisterUserUseCase,
@@ -16,6 +17,7 @@ const UserUseCases = {
   ResendInviteUseCase,
   WhoAmIUseCase,
   ChangePasswordUseCase,
+  AssignUserBranchUseCase,
 };
 
 export default UserUseCases;

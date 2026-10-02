@@ -9,6 +9,7 @@ import {
   resendInvite,
   whoAmI,
   changePassword,
+  assignUserBranch,
 } from "../controllers/user.controller.js";
 import { verifyRole } from "../../middleware/verify.role.middleware.js";
 import { UserRoles } from "../../shared/application.constants.js";
@@ -56,6 +57,14 @@ userRouter.post(
   ]),
   validateBody(userSchemas.ResendInviteSchema),
   resendInvite,
+);
+
+userRouter.post(
+  "/assign-branch",
+  authMiddleware,
+  verifyRole([UserRoles["Business Admin"], UserRoles["Super Admin"]]),
+  validateBody(userSchemas.AssignUserBranchSchema),
+  assignUserBranch,
 );
 
 userRouter.patch(

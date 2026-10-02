@@ -174,6 +174,28 @@ export default {
     required: ["userId"],
     additionalProperties: false,
   },
+  AssignUserBranchSchema: {
+    $id: "https://example.com/schemas/assign-user-branch.json",
+    type: "object",
+    properties: {
+      userId: {
+        type: "integer",
+        minimum: 1,
+        errorMessage: {
+          minimum: "userId must be a positive integer",
+        },
+      },
+      branchId: {
+        type: "integer",
+        minimum: 1,
+        errorMessage: {
+          minimum: "branchId must be a positive integer",
+        },
+      },
+    },
+    required: ["userId", "branchId"],
+    additionalProperties: false,
+  },
   DeleteUserSchema: {
     $id: "https://example.com/schemas/delete-user.json",
     type: "object",

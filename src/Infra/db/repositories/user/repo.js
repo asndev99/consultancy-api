@@ -86,6 +86,27 @@ export async function addUserToBranch({
   });
 }
 
+// Includes soft-deleted rows, since (userId, branchId) is unique.
+export async function FindUserBranch(userId, branchId) {
+  return prisma.userBranch.findUnique({
+    where: {
+      userId_branchId: { userId, branchId },
+    },
+  });
+}
+
+export async function RestoreUserBranch(userBranchId, updatedBy) {
+  return prisma.userBranch.update({
+    where: { id: userBranchId },
+    data: {
+      isActive: true,
+      deletedAt: null,
+      deletedBy: null,
+      updatedBy,
+    },
+  });
+}
+
 export async function createUser(data) {
   return prisma.user.create({ data });
 }

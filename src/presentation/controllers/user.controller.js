@@ -56,6 +56,21 @@ export const changePassword = async (req, res, next) => {
   }
 };
 
+export const assignUserBranch = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.AssignUserBranchUseCase(
+      req,
+      req.body.userId,
+      req.body.branchId,
+    );
+    res
+      .status(201)
+      .json({ code: 0, data, message: "User assigned to branch" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const resendInvite = async (req, res, next) => {
   try {
     const data = await UserUseCases.ResendInviteUseCase(req, req.body.userId);
