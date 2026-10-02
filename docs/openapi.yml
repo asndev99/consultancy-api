@@ -655,6 +655,9 @@ paths:
                         email:
                           type: string
                           format: email
+                        phoneNumber:
+                          type: string
+                          nullable: true
                         previousEmailAddress:
                           type: string
                           nullable: true
@@ -4267,6 +4270,14 @@ components:
         targetCountry:
           type: string
           nullable: true
+        Branch:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            name:
+              type: string
         Student:
           type: object
           properties:

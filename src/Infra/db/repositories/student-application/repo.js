@@ -124,6 +124,9 @@ export function FindStudentApplicationDetailsById(applicationId, businessId) {
       isAdmissionTeamAssigned: true,
       isManagerAssigned: true,
       targetCountry: true,
+      Branch: {
+        select: { id: true, name: true },
+      },
       Student: {
         select: {
           id: true,

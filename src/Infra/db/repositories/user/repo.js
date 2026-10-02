@@ -144,6 +144,7 @@ export async function getUsersByBusinessId({
       id: true,
       name: true,
       email: true,
+      phoneNumber: true,
       previousEmailAddress: true,
       status: true,
       isActive: true,
