@@ -397,6 +397,75 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden - insufficient permissions
+  /user/assign-branch:
+    post:
+      tags:
+        - User
+      summary: Assign a user to an additional branch
+      description: >-
+        Accessible by Business Admin and Super Admin. The user and branch must
+        belong to the same business (and to the caller's business, unless the
+        caller is a Super Admin). Fails if the user is already assigned to
+        the branch; a previously removed assignment is restored instead of
+        re-created.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - branchId
+              properties:
+                userId:
+                  type: integer
+                  minimum: 1
+                branchId:
+                  type: integer
+                  minimum: 1
+      responses:
+        "201":
+          description: User assigned to branch
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: User assigned to branch
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      userId:
+                        type: integer
+                      branchId:
+                        type: integer
+                      businessId:
+                        type: integer
+                      isActive:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: >-
+            Validation failed, user is already assigned to that branch, or
+            user has no business
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: User or branch not found
   /user/update/{id}:
     patch:
       tags:
