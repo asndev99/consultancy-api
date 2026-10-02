@@ -41,6 +41,8 @@ export const AcceptInviteUseCase = async (token, password) => {
     isActive: true,
     status: UserStatus.Active,
     inviteAcceptedAt: new Date(),
+    // The invite link was delivered to this address, so it's verified.
+    isEmailVerified: true,
   });
 
   return {
