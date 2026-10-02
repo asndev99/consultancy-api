@@ -11,6 +11,7 @@ export const UserStatus = {
   Active: "Active",
   "Invitation Pending": "Invitation Pending",
   Freeze: "Freeze",
+  InActive: "InActive",
 };
 
 export const UniversityType = {

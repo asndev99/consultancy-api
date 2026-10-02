@@ -341,7 +341,8 @@ paths:
       description: >-
         Public endpoint. Verifies the invite token (embedded userId,
         businessId, branchId) from the query string, then sets the user's
-        password, marks them active, and sets status to Active.
+        password, marks them active, sets status to Active, records
+        inviteAcceptedAt, and marks the email as verified (isEmailVerified).
       parameters:
         - name: token
           in: query
@@ -407,7 +408,8 @@ paths:
         belong to the same business (and to the caller's business, unless the
         caller is a Super Admin). Fails if the user is already assigned to
         the branch; a previously removed assignment is restored instead of
-        re-created.
+        re-created. Sub Agents are rejected and must be assigned via
+        /sub-agent/assign-branch so their branch profile is created.
       security:
         - bearerAuth: []
       requestBody:
@@ -458,8 +460,8 @@ paths:
                         format: date-time
         "400":
           description: >-
-            Validation failed, user is already assigned to that branch, or
-            user has no business
+            Validation failed, user is already assigned to that branch, user
+            has no business, or user is a Sub Agent
         "401":
           description: Unauthorized
         "403":
@@ -2999,6 +3001,473 @@ paths:
           description: Forbidden - insufficient permissions or not the remark's author
         "404":
           description: Remark not found
+  /sub-agent/register:
+    post:
+      tags:
+        - SubAgent
+      summary: Register a sub agent and send them an invite
+      description: >-
+        Accessible by Business Admin, Super Admin and Manager. Fails if a user
+        with this email already exists in the business. Creates the User
+        (role Sub Agent), their UserBranch assignment and a
+        SubAgentBranchProfile in one transaction, then sends the invite email
+        (an email failure does not fail the request). Non Super Admin callers
+        can only register sub agents in their own business, and the branch
+        must belong to that business.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - phoneNumber
+                - role
+                - companyName
+                - businessId
+                - branchId
+                - commissionRate
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                email:
+                  type: string
+                  format: email
+                phoneNumber:
+                  type: string
+                  minLength: 2
+                  maxLength: 30
+                role:
+                  type: string
+                  enum:
+                    - Sub Agent
+                companyName:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                businessId:
+                  type: integer
+                  minimum: 1
+                branchId:
+                  type: integer
+                  minimum: 1
+                commissionRate:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                targetCountries:
+                  type: array
+                  items:
+                    type: string
+                  description: Defaults to an empty array when omitted
+      responses:
+        "201":
+          description: Invitation sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Invitation sent
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      userNo:
+                        type: string
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      phoneNumber:
+                        type: string
+                      role:
+                        type: string
+                      status:
+                        type: string
+                      businessId:
+                        type: integer
+                      branchId:
+                        type: integer
+                      inviteSentAt:
+                        type: string
+                        format: date-time
+                      subAgentProfile:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          companyName:
+                            type: string
+                          commissionRate:
+                            type: number
+                          targetCountries:
+                            type: array
+                            items:
+                              type: string
+        "400":
+          description: Validation failed, or a user with this email already exists
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Business or branch not found
+  /sub-agent/assign-branch:
+    post:
+      tags:
+        - SubAgent
+      summary: Assign an existing sub agent to an additional branch
+      description: >-
+        Accessible by Business Admin and Super Admin. The user must be a Sub
+        Agent in the caller's business (any business for Super Admin) and the
+        branch must belong to the sub agent's business. Creates the UserBranch
+        and its SubAgentBranchProfile in one transaction. Fails if the sub
+        agent is already assigned to the branch; a previously removed
+        assignment and profile are restored instead of re-created. Omitted
+        profile fields use the defaults (commissionRate 0, targetCountries
+        empty, companyName null) on create and are left unchanged on restore.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - branchId
+              properties:
+                userId:
+                  type: integer
+                  minimum: 1
+                branchId:
+                  type: integer
+                  minimum: 1
+                companyName:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                commissionRate:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                targetCountries:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "201":
+          description: Sub agent assigned to branch
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Sub agent assigned to branch
+                  data:
+                    type: object
+                    properties:
+                      userBranchId:
+                        type: integer
+                      userId:
+                        type: integer
+                      branchId:
+                        type: integer
+                      branchName:
+                        type: string
+                      subAgentProfile:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          companyName:
+                            type: string
+                            nullable: true
+                          commissionRate:
+                            type: number
+                          targetCountries:
+                            type: array
+                            items:
+                              type: string
+                          referredStudents:
+                            type: integer
+        "400":
+          description: Validation failed, or this user already exists on this branch
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Sub agent or branch not found
+  /sub-agent/{subAgentId}:
+    patch:
+      tags:
+        - SubAgent
+      summary: Edit a sub agent
+      description: >-
+        Accessible by Business Admin, Super Admin and Manager. subAgentId is
+        the SubAgentBranchProfile id returned by the list endpoint. name,
+        email and phoneNumber update the sub agent's User (all branches);
+        companyName, commissionRate and targetCountries update this branch's
+        profile only. All fields optional, at least one required. Role,
+        branchId and businessId cannot be changed here. A new email must not
+        already exist in the business; the old one is kept in
+        previousEmailAddress.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subAgentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                email:
+                  type: string
+                  format: email
+                phoneNumber:
+                  type: string
+                  minLength: 2
+                  maxLength: 30
+                companyName:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                commissionRate:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                targetCountries:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Sub agent updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Sub agent updated
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      userId:
+                        type: integer
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      phoneNumber:
+                        type: string
+                        nullable: true
+                      status:
+                        type: string
+                      inviteAcceptedAt:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      isEmailVerified:
+                        type: boolean
+                      companyName:
+                        type: string
+                        nullable: true
+                      commissionRate:
+                        type: number
+                      targetCountries:
+                        type: array
+                        items:
+                          type: string
+                      referredStudents:
+                        type: integer
+                      branchName:
+                        type: string
+        "400":
+          description: Validation failed, or a user with this email already exists
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Sub agent not found
+  /sub-agent/{subAgentId}/status:
+    patch:
+      tags:
+        - SubAgent
+      summary: Activate or deactivate a sub agent
+      description: >-
+        Accessible by Business Admin, Super Admin and Manager. subAgentId is
+        the SubAgentBranchProfile id. status true sets the sub agent's User
+        status to Active, false sets it to InActive. Status is on the User,
+        so it applies across all of the sub agent's branches. Only Active
+        users can log in.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subAgentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: boolean
+      responses:
+        "200":
+          description: Sub agent status updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Sub agent status updated
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      userId:
+                        type: integer
+                      status:
+                        type: string
+                        enum:
+                          - Active
+                          - InActive
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Sub agent not found
+  /sub-agent/branch/{branchId}:
+    get:
+      tags:
+        - SubAgent
+      summary: Get sub agents assigned to a branch
+      description: >-
+        Accessible by Business Admin, Super Admin and Manager. Scoped by the
+        authenticated user's businessId (unscoped for Super Admin) and the
+        branchId path param. Excludes deleted profiles, removed branch
+        assignments and deleted users.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sub agents fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Sub agents fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: SubAgentBranchProfile id
+                        userId:
+                          type: integer
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        phoneNumber:
+                          type: string
+                          nullable: true
+                        status:
+                          type: string
+                        inviteAcceptedAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                        isEmailVerified:
+                          type: boolean
+                        companyName:
+                          type: string
+                          nullable: true
+                        commissionRate:
+                          type: number
+                        targetCountries:
+                          type: array
+                          items:
+                            type: string
+                        referredStudents:
+                          type: integer
+                        branchName:
+                          type: string
+        "400":
+          description: Invalid branchId
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
   /lead-form:
     get:
       tags:

@@ -12,6 +12,7 @@ import documentRouter from "./presentation/routes/document.route.js";
 import studentApplicationRouter from "./presentation/routes/student-application.route.js";
 import studentApplicationRemarksRouter from "./presentation/routes/student-application-remarks.route.js";
 import leadFormRouter from "./presentation/routes/lead-form.route.js";
+import subAgentRouter from "./presentation/routes/sub-agent.route.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
@@ -46,6 +47,7 @@ app.use("/document", documentRouter);
 app.use("/student-application", studentApplicationRouter);
 app.use("/student-application-remarks", studentApplicationRemarksRouter);
 app.use("/lead-form", leadFormRouter);
+app.use("/sub-agent", subAgentRouter);
 
 app.use(errorMiddleware);
 

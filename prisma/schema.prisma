@@ -132,8 +132,7 @@ model User {
 //for now a user with a particular role can exist at multiple branches 
 //but a user with different role cannot exists at multiple branches
 model UserBranch {
-  id Int @id @default(autoincrement())
-
+  id       Int     @id @default(autoincrement())
   isActive Boolean @default(false)
   branchId Int
   Branch   Branch  @relation(fields: [branchId], references: [id])
@@ -148,11 +147,29 @@ model UserBranch {
   updatedBy Int?
   deletedBy Int?
 
+  createdAt              DateTime               @default(now()) @db.Timestamptz()
+  updatedAt              DateTime               @updatedAt @db.Timestamptz()
+  deletedAt              DateTime?              @db.Timestamptz()
+  subAgentPartnerDetails SubAgentBranchProfile?
+
+  @@unique([userId, branchId])
+}
+
+model SubAgentBranchProfile {
+  id               Int        @id @default(autoincrement())
+  userBranchId     Int        @unique
+  referredStudents Int        @default(0)
+  branch           UserBranch @relation(fields: [userBranchId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  companyName      String?
+  commissionRate   Float      @default(0)
+  targetCountries  Json       @default("[]")
+
+  createdBy Int
+  updatedBy Int?
+  deletedBy Int?
   createdAt DateTime  @default(now()) @db.Timestamptz()
   updatedAt DateTime  @updatedAt @db.Timestamptz()
   deletedAt DateTime? @db.Timestamptz()
-
-  @@unique([userId, branchId])
 }
 
 enum LeadStage {
