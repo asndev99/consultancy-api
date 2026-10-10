@@ -30,7 +30,7 @@
     "multer": "^2.2.0",
     "nodemailer": "^10.0.3",
     "pg": "^8.23.0",
-    "prisma": "8.0.0-rc.22",
+    "prisma": "7.9.1",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.19.0",
     "yamljs": "^0.3.0"
