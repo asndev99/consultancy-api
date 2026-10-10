@@ -10,3 +10,4 @@ public/*
 docker-compose.yml
 backend.dockerFile
 .dockerignore
+src/generated

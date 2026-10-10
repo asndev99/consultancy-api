@@ -19,9 +19,13 @@ services:
     networks:
       - shared
       - db
+    volumes:
+      - uploads:/app/public
 
 networks:
   shared:
     external: true
   db:
     external: true
+volumes:
+  uploads:
