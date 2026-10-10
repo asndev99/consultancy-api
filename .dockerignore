@@ -1,0 +1,12 @@
+node_modules
+.git
+.github
+.env
+.env.*
+!.env.example
+src/generated/prisma
+public/*
+!public/.gitkeep
+docker-compose.yml
+backend.dockerFile
+.dockerignore
