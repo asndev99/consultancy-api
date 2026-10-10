@@ -3,6 +3,7 @@ import BranchUseCases from "../../usecases/branch/index.js";
 export const getBranchesByBusiness = async (req, res, next) => {
   try {
     const { page, pageSize, isActive } = req.query;
+    
     const data = await BranchUseCases.GetBranchesByBusinessUseCase(
       req.user.businessId,
       page ? Number(page) : undefined,
