@@ -1,6 +1,6 @@
 services:
   backend:
-    image: ghcr.io/yourname/backend:latest
+    image: ghcr.io/asndev99/consultancy-api:latest
     container_name: cz_dev_backend
     restart: unless-stopped
     environment:
