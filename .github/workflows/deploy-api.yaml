@@ -25,8 +25,9 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./backend.dockerFile
           push: true
-          tags: ghcr.io/yourname/backend:latest
+          tags: ghcr.io/asndev99/consultancy-api:latest
 
       - name: Redeploy on Portainer
         if: ${{ env.WEBHOOK != '' }}
