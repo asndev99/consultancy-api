@@ -3403,7 +3403,10 @@ paths:
         Accessible by Business Admin, Super Admin and Manager. Scoped by the
         authenticated user's businessId (unscoped for Super Admin) and the
         branchId path param. Excludes deleted profiles, removed branch
-        assignments and deleted users.
+        assignments and deleted users. Each sub agent includes `branches`,
+        every active branch the sub agent is assigned to (including this
+        one). For a Manager, `branches` only lists branches the Manager is
+        also assigned to.
       security:
         - bearerAuth: []
       parameters:
@@ -3464,6 +3467,19 @@ paths:
                           type: integer
                         branchName:
                           type: string
+                        branches:
+                          type: array
+                          description: >-
+                            Branches the sub agent is assigned to. For a
+                            Manager, limited to branches the Manager also
+                            manages.
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              name:
+                                type: string
         "400":
           description: Invalid branchId
         "401":

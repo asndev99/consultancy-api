@@ -1,6 +1,8 @@
 import { prisma } from "../../prisma.client.js";
 
-export function FindSubAgentsByBranch(businessId, branchId) {
+// managerUserId, when set, limits each sub agent's `branches` list to the
+// branches that manager is also assigned to.
+export function FindSubAgentsByBranch(businessId, branchId, managerUserId) {
   return prisma.subAgentBranchProfile.findMany({
     where: {
       deletedAt: null,
@@ -12,7 +14,36 @@ export function FindSubAgentsByBranch(businessId, branchId) {
         User: { isDeleted: false },
       },
     },
-    select: subAgentProfileSelect,
+    select: {
+      ...subAgentProfileSelect,
+      branch: {
+        select: {
+          ...subAgentProfileSelect.branch.select,
+          User: {
+            select: {
+              ...subAgentProfileSelect.branch.select.User.select,
+              userBranches: {
+                where: {
+                  deletedAt: null,
+                  Branch: {
+                    isDeleted: false,
+                    ...(managerUserId != null
+                      ? {
+                          branchUsers: {
+                            some: { userId: managerUserId, deletedAt: null },
+                          },
+                        }
+                      : {}),
+                  },
+                },
+                select: { Branch: { select: { id: true, name: true } } },
+                orderBy: { branchId: "asc" },
+              },
+            },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 }
