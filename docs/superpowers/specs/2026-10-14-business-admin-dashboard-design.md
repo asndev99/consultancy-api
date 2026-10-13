@@ -7,15 +7,15 @@ Status: Approved in conversation; awaiting written-spec review
 
 Give a Business Admin read-only APIs that show their organization's progress:
 headline numbers (branches, students, sub agents, applications), a per-branch
-breakdown, distributions, and trends over time. The API returns data only; the
+breakdown, a sub-agent leaderboard, distributions, and trends over time. The API returns data only; the
 frontend renders the charts.
 
 ## Scope
 
 In scope:
 
-- Four `GET` endpoints under `/dashboard`, Business Admin only.
-- Optional `branchId` filter on summary, distribution and trends.
+- Five `GET` endpoints under `/dashboard`, Business Admin only.
+- Optional `branchId` filter on summary, sub-agents, distribution and trends.
 - Selectable date range and grouping for trends.
 - A frontend guide (`docs/dashboard-frontend-guide.md`) written after
   implementation.
@@ -41,6 +41,7 @@ src/usecases/dashboard/
   dashboard.scope.js                shared param parsing + branch ownership check
   get.dashboard.summary.usecase.js
   get.branch.stats.usecase.js
+  get.sub.agent.stats.usecase.js
   get.distribution.usecase.js
   get.trends.usecase.js
 src/Infra/db/repositories/dashboard/
@@ -113,6 +114,47 @@ No `branchId` param.
   ]
 }
 ```
+
+### `GET /dashboard/sub-agents?branchId=`
+
+Sub-agent leaderboard, for a table or bar chart.
+
+```json
+{
+  "code": 0,
+  "message": "Sub agent stats fetched",
+  "data": [
+    {
+      "userId": 42,
+      "name": "Ali Raza",
+      "companyName": "Raza Consultants",
+      "status": "Active",
+      "students": 38,
+      "applications": { "total": 51, "active": 20, "enrolled": 14, "rejected": 9 },
+      "enrolledStudents": 12,
+      "conversionRate": 31.6
+    }
+  ]
+}
+```
+
+| Field | Definition |
+|---|---|
+| Agents listed | `User` with role `Sub Agent` in the business, `isDeleted: false`. With `branchId`: only those with a `UserBranch` for that branch where `deletedAt: null`. Agents with no students appear with zeros. |
+| `students` | `Student` with `createdBy` = the agent, `isDeleted: false`. With `branchId`: only students in that branch. |
+| `applications` | `StudentApplication` of those students with `deletedAt: null`; `active`/`enrolled`/`rejected` as in `/summary`. |
+| `enrolledStudents` | Those students with at least one application whose status is `Enrolled`. |
+| `conversionRate` | `enrolledStudents / students × 100`, rounded to 1 decimal; `0` when `students` is 0. |
+| `companyName` | From the agent's `SubAgentBranchProfile` for `branchId`; without `branchId`, from their earliest-created non-deleted profile; `null` if none. |
+
+- Sorted by `enrolledStudents` descending, then `students` descending, then
+  `name`.
+- Attribution uses `Student.createdBy`: a student created by a counselor on an
+  agent's behalf is not credited to the agent. The stored
+  `SubAgentBranchProfile.referredStudents` counter is not used because it can
+  drift. The frontend guide states both points.
+- Queries: agent list, student `groupBy` on `createdBy`, and application counts
+  joined through `studentId`, run with `Promise.all`.
 
 ### `GET /dashboard/distribution?branchId=`
 
@@ -209,6 +251,7 @@ The repo has no test suite. Verification is manual against the local dev
 database (requires Postgres running):
 
 1. Call each endpoint as a Business Admin, with and without `branchId`.
+   For `/sub-agents`, include an agent with no students and confirm zeros.
 2. Compare numbers with direct SQL counts using the definitions above.
 3. Check error cases: bad `branchId`, a `branchId` from another business,
    bad dates, `from > to`, over-limit ranges, non-admin role (403).
@@ -218,6 +261,7 @@ database (requires Postgres running):
 
 1. Dashboard module (route, controller, usecases, repository) and mount in
    `src/app.js`.
-2. `docs/openapi.yml` entries for all four endpoints.
+2. `docs/openapi.yml` entries for all five endpoints.
 3. `docs/dashboard-frontend-guide.md`: each endpoint's params, response, and
-   suggested chart type, sample requests, and the `enrolled` caveat.
+   suggested chart type, sample requests, the `enrolled` caveat, and the
+   sub-agent attribution caveat.
