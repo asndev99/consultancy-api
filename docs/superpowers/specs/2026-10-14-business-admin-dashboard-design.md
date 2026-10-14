@@ -191,7 +191,7 @@ Time series for line graphs.
 |---|---|---|
 | `groupBy` | `month` | `day`, `week` or `month` |
 | `to` | today | `YYYY-MM-DD` |
-| `from` | start of the month 11 months before `to` | `YYYY-MM-DD`, must be ≤ `to` |
+| `from` | depends on `groupBy`, counting the period containing `to`: `day` → `to` − 29 days (30 days); `week` → the Monday 11 weeks before `to`'s week (12 weeks); `month` → start of the month 11 months before `to` (12 months) | `YYYY-MM-DD`, must be ≤ `to` |
 
 Range limits: `day` ≤ 92 days, `week` ≤ 2 years, `month` ≤ 5 years. Violations
 return 400.

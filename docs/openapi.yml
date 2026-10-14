@@ -4603,8 +4603,319 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden - insufficient permissions
+  /dashboard/summary:
+    get:
+      tags:
+        - Dashboard
+      summary: Headline numbers for the admin's business
+      description: >
+        Business Admin only. Counts reflect current state and exclude soft-deleted rows.
+        With `branchId`, the `branches` object is omitted and the other counts are for that branch.
+        Active applications are those not `Enrolled` or `Rejected`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: query
+          required: false
+          description: Restrict counts to one branch of the admin's business.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Dashboard summary fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Dashboard summary fetched
+                  data:
+                    type: object
+                    properties:
+                      branches:
+                        type: object
+                        description: Omitted when branchId is given.
+                        properties:
+                          total: { type: integer, example: 5 }
+                          active: { type: integer, example: 4 }
+                      students:
+                        type: object
+                        properties:
+                          total: { type: integer, example: 320 }
+                      subAgents:
+                        type: object
+                        properties:
+                          total: { type: integer, example: 12 }
+                      applications:
+                        $ref: "#/components/schemas/DashboardApplicationCounts"
+        "400":
+          description: Invalid branchId, or the user has no business
+        "401":
+          description: Missing or invalid token
+        "403":
+          description: Not a Business Admin
+        "404":
+          description: Branch not found in the admin's business
+  /dashboard/branches:
+    get:
+      tags:
+        - Dashboard
+      summary: Per-branch stats for a bar chart
+      description: >
+        Business Admin only. One row per non-deleted branch, branches with no data included with zeros.
+        Sorted by students descending, then name. Applications are attributed by the application's branchId.
+        Rows may not sum to /dashboard/summary: applications with no branch and students/applications in soft-deleted branches appear in no row, and subAgents counts branch assignments, so an agent assigned to two branches is counted in both rows.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Branch stats fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Branch stats fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        branchId: { type: integer, example: 1 }
+                        name: { type: string, example: Lahore }
+                        isActive: { type: boolean, example: true }
+                        students: { type: integer, example: 140 }
+                        subAgents: { type: integer, example: 5 }
+                        applications:
+                          $ref: "#/components/schemas/DashboardApplicationCounts"
+        "400":
+          description: The user has no business
+        "401":
+          description: Missing or invalid token
+        "403":
+          description: Not a Business Admin
+  /dashboard/sub-agents:
+    get:
+      tags:
+        - Dashboard
+      summary: Sub-agent leaderboard
+      description: >
+        Business Admin only. One row per non-deleted sub agent (with zeros if they have no students).
+        Students are attributed by Student.createdBy; a student a counselor created on an agent's
+        behalf is not credited to the agent. conversionRate = enrolledStudents / students × 100,
+        rounded to 1 decimal, 0 when students is 0. Sorted by enrolledStudents desc, students desc, name.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: query
+          required: false
+          description: Only agents assigned to this branch, counting only students in this branch.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Sub agent stats fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Sub agent stats fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        userId: { type: integer, example: 42 }
+                        name: { type: string, example: Ali Raza }
+                        companyName: { type: string, nullable: true, example: Raza Consultants }
+                        status: { type: string, example: Active }
+                        students: { type: integer, example: 38 }
+                        applications:
+                          $ref: "#/components/schemas/DashboardApplicationCounts"
+                        enrolledStudents: { type: integer, example: 12 }
+                        conversionRate: { type: number, example: 31.6 }
+        "400":
+          description: Invalid branchId, or the user has no business
+        "401":
+          description: Missing or invalid token
+        "403":
+          description: Not a Business Admin
+        "404":
+          description: Branch not found in the admin's business
+  /dashboard/distribution:
+    get:
+      tags:
+        - Dashboard
+      summary: Current-state breakdowns for pie, donut or bar charts
+      description: >
+        Business Admin only. studentsByLeadStage and applicationsByStatus list every known value in
+        pipeline order with 0 where empty; unexpected stored statuses follow the known ones.
+        applicationsByTargetCountry and studentsByLeadSource are sorted by count descending,
+        null/blank values reported as "Unknown", top 10 kept and the rest summed into "Other".
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Dashboard distribution fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Dashboard distribution fetched
+                  data:
+                    type: object
+                    properties:
+                      studentsByLeadStage:
+                        type: array
+                        items: { $ref: "#/components/schemas/DashboardKeyCount" }
+                      applicationsByStatus:
+                        type: array
+                        items: { $ref: "#/components/schemas/DashboardKeyCount" }
+                      applicationsByTargetCountry:
+                        type: array
+                        items: { $ref: "#/components/schemas/DashboardKeyCount" }
+                      studentsByLeadSource:
+                        type: array
+                        items: { $ref: "#/components/schemas/DashboardKeyCount" }
+        "400":
+          description: Invalid branchId, or the user has no business
+        "401":
+          description: Missing or invalid token
+        "403":
+          description: Not a Business Admin
+        "404":
+          description: Branch not found in the admin's business
+  /dashboard/trends:
+    get:
+      tags:
+        - Dashboard
+      summary: Time series for line charts
+      description: >
+        Business Admin only. Dates are bucketed in the business time zone; from/to are inclusive
+        calendar days. Every period in the range is returned, with zeros for empty ones.
+        Labels: day → YYYY-MM-DD, week → Monday YYYY-MM-DD, month → YYYY-MM.
+        Max range: day 92 days, week 731 days, month 1827 days.
+        `enrolled` counts applications currently Enrolled, bucketed by their last update time
+        (an approximation; there is no status history).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: groupBy
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: month
+        - name: from
+          in: query
+          required: false
+          description: >
+            Defaults depend on groupBy, counting the period that contains `to`:
+            day → 29 days before `to` (30 days); week → the Monday 11 weeks before
+            `to`'s week (12 weeks); month → the first day of the month 11 months
+            before `to` (12 months).
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          description: Defaults to today in the business time zone.
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Dashboard trends fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Dashboard trends fetched
+                  data:
+                    type: object
+                    properties:
+                      groupBy: { type: string, example: month }
+                      from: { type: string, format: date, example: "2025-11-01" }
+                      to: { type: string, format: date, example: "2026-10-14" }
+                      timeZone: { type: string, example: Asia/Karachi }
+                      series:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            period: { type: string, example: "2025-11" }
+                            newStudents: { type: integer, example: 25 }
+                            newApplications: { type: integer, example: 30 }
+                            enrolled: { type: integer, example: 6 }
+        "400":
+          description: Invalid branchId, from, to or groupBy; from after to; range over the limit
+        "401":
+          description: Missing or invalid token
+        "403":
+          description: Not a Business Admin
+        "404":
+          description: Branch not found in the admin's business
 components:
   schemas:
+    DashboardApplicationCounts:
+      type: object
+      properties:
+        total: { type: integer, example: 410 }
+        active: { type: integer, example: 180 }
+        enrolled: { type: integer, example: 150 }
+        rejected: { type: integer, example: 80 }
+    DashboardKeyCount:
+      type: object
+      properties:
+        key: { type: string, example: UK }
+        count: { type: integer, example: 150 }
     StudentApplicationRemark:
       type: object
       properties:
