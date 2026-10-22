@@ -8,6 +8,9 @@ import {
   createStudentApplication,
   getStudentApplications,
   getStudentApplicationsByBranch,
+  getManagerApplicationsByBranch,
+  getCounselorApplicationsByBranch,
+  getAdmissionTeamApplicationsByBranch,
   getStudentApplicationDetails,
   getStudentApplicationRemarks,
   assignStudentApplication,
@@ -22,11 +25,6 @@ const manageStudentApplicationRoles = [
   UserRoles["Manager"],
   UserRoles["Counselor"],
   UserRoles["Business Admin"],
-];
-
-const viewStudentApplicationRoles = [
-  ...manageStudentApplicationRoles,
-  UserRoles["Admission Team"],
 ];
 
 studentApplicationRouter.post(
@@ -47,8 +45,29 @@ studentApplicationRouter.get(
 studentApplicationRouter.get(
   "/branch/:branchId",
   authMiddleware,
-  verifyRole(viewStudentApplicationRoles),
+  verifyRole([UserRoles["Business Admin"]]),
   getStudentApplicationsByBranch,
+);
+
+studentApplicationRouter.get(
+  "/manager/branch/:branchId",
+  authMiddleware,
+  verifyRole([UserRoles["Manager"], UserRoles["Business Admin"]]),
+  getManagerApplicationsByBranch,
+);
+
+studentApplicationRouter.get(
+  "/counselor/branch/:branchId",
+  authMiddleware,
+  verifyRole([UserRoles["Counselor"]]),
+  getCounselorApplicationsByBranch,
+);
+
+studentApplicationRouter.get(
+  "/admission-team/branch/:branchId",
+  authMiddleware,
+  verifyRole([UserRoles["Admission Team"]]),
+  getAdmissionTeamApplicationsByBranch,
 );
 
 studentApplicationRouter.get(

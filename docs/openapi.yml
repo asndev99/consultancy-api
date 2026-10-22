@@ -2245,6 +2245,8 @@ paths:
       summary: Create a student application
       description: >-
         Accessible by Manager, Counselor and Business Admin.
+        `createdBy` is always set to the authenticated user. When the caller is a
+        Counselor, `counselorId` is also set to the caller's id; otherwise it is null.
       security:
         - bearerAuth: []
       requestBody:
@@ -2382,15 +2384,12 @@ paths:
     get:
       tags:
         - StudentApplication
-      summary: Get a paginated, role-scoped list of student applications for a branch
+      summary: Get a paginated list of all student applications for a branch
       description: >-
-        Accessible by Manager, Counselor, Business Admin and Admission Team.
-        Always scoped to the branchId path param, the authenticated user's
-        businessId, and active (isActive true, deletedAt null) applications.
-        Counselor sees only applications they created (managerId and
-        admissionOfficerId filters apply). Admission Team sees only
-        applications assigned to them (filters are ignored). Manager and
-        Business Admin see all applications in the branch (filters apply).
+        Accessible by Business Admin only. Managers, Counselors and Admission
+        Team use their own endpoints. Always scoped to the branchId path param, the
+        authenticated user's businessId, and active (isActive true, deletedAt
+        null) applications.
       security:
         - bearerAuth: []
       parameters:
@@ -2414,13 +2413,13 @@ paths:
         - name: managerId
           in: query
           required: false
-          description: Optional filter by assigned manager (Counselor, Manager, Business Admin only)
+          description: Optional filter by assigned manager
           schema:
             type: integer
         - name: admissionOfficerId
           in: query
           required: false
-          description: Optional filter by assigned admission officer (Counselor, Manager, Business Admin only)
+          description: Optional filter by assigned admission officer
           schema:
             type: integer
       responses:
@@ -2429,70 +2428,196 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                    example: 0
-                  message:
-                    type: string
-                    example: Student applications fetched
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: integer
-                        studentId:
-                          type: integer
-                        Student:
-                          type: object
-                          properties:
-                            fullName:
-                              type: string
-                        applicationStatus:
-                          type: string
-                        applicationTargetUniversity:
-                          type: string
-                        applicationTargetCourses:
-                          type: array
-                          items:
-                            type: string
-                        targetCountry:
-                          type: string
-                          nullable: true
-                        applicationIntake:
-                          type: string
-                        Manager:
-                          type: object
-                          nullable: true
-                          properties:
-                            id:
-                              type: integer
-                            name:
-                              type: string
-                        AdmissionOfficer:
-                          type: object
-                          nullable: true
-                          properties:
-                            id:
-                              type: integer
-                            name:
-                              type: string
-                  pagination:
-                    type: object
-                    properties:
-                      total:
-                        type: integer
-                      page:
-                        type: integer
-                      limit:
-                        type: integer
-                      totalPages:
-                        type: integer
+                $ref: "#/components/schemas/StudentApplicationBranchList"
         "400":
           description: Validation failed - invalid branchId, page, limit, managerId or admissionOfficerId
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+  /student-application/manager/branch/{branchId}:
+    get:
+      tags:
+        - StudentApplication
+      summary: Get all student applications for a branch (Manager, Business Admin)
+      description: >-
+        Accessible by Manager and Business Admin. Returns every application in the branch,
+        optionally filtered by counselorId, admissionOfficerId and status (all
+        optional). Scoped to the user's businessId and active (isActive true,
+        deletedAt null) applications.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: counselorId
+          in: query
+          required: false
+          description: Optional filter by counselor
+          schema:
+            type: integer
+        - name: admissionOfficerId
+          in: query
+          required: false
+          description: Optional filter by assigned admission officer
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          description: Optional filter on applicationStatus
+          schema:
+            type: string
+            enum:
+              [
+                "Draft",
+                "Under Review",
+                "Pending Documents",
+                "Offer Letter Issued",
+                "Visa Processing",
+                "Enrolled",
+                "Rejected",
+              ]
+      responses:
+        "200":
+          description: Student applications fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentApplicationBranchList"
+        "400":
+          description: Validation failed - invalid branchId, page, limit, counselorId, admissionOfficerId or status
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+  /student-application/counselor/branch/{branchId}:
+    get:
+      tags:
+        - StudentApplication
+      summary: Get the logged-in counselor's student applications for a branch
+      description: >-
+        Accessible by Counselor only. Returns applications in the branch whose
+        counselorId is the authenticated user. Scoped to the user's businessId
+        and active (isActive true, deletedAt null) applications.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          required: false
+          description: Optional filter on applicationStatus
+          schema:
+            type: string
+            enum:
+              [
+                "Draft",
+                "Under Review",
+                "Pending Documents",
+                "Offer Letter Issued",
+                "Visa Processing",
+                "Enrolled",
+                "Rejected",
+              ]
+      responses:
+        "200":
+          description: Student applications fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentApplicationBranchList"
+        "400":
+          description: Validation failed - invalid branchId, page, limit or status
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+  /student-application/admission-team/branch/{branchId}:
+    get:
+      tags:
+        - StudentApplication
+      summary: Get the logged-in admission officer's student applications for a branch
+      description: >-
+        Accessible by Admission Team only. Returns applications in the branch
+        whose admissionOfficerId is the authenticated user. Scoped to the user's
+        businessId and active (isActive true, deletedAt null) applications.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          required: false
+          description: Optional filter on applicationStatus
+          schema:
+            type: string
+            enum:
+              [
+                "Draft",
+                "Under Review",
+                "Pending Documents",
+                "Offer Letter Issued",
+                "Visa Processing",
+                "Enrolled",
+                "Rejected",
+              ]
+      responses:
+        "200":
+          description: Student applications fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentApplicationBranchList"
+        "400":
+          description: Validation failed - invalid branchId, page, limit or status
         "401":
           description: Unauthorized
         "403":
@@ -5016,6 +5141,12 @@ components:
         targetCountry:
           type: string
           nullable: true
+        counselorId:
+          type: integer
+          nullable: true
+          description: Set to the creator's id when the application is created by a Counselor
+        createdBy:
+          type: integer
         Manager:
           type: object
           nullable: true
@@ -5036,6 +5167,69 @@ components:
               type: string
             email:
               type: string
+    StudentApplicationBranchList:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: Student applications fetched
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              studentId:
+                type: integer
+              Student:
+                type: object
+                properties:
+                  fullName:
+                    type: string
+              applicationStatus:
+                type: string
+              applicationTargetUniversity:
+                type: string
+              applicationTargetCourses:
+                type: array
+                items:
+                  type: string
+              targetCountry:
+                type: string
+                nullable: true
+              applicationIntake:
+                type: string
+              Manager:
+                type: object
+                nullable: true
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+              AdmissionOfficer:
+                type: object
+                nullable: true
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+        pagination:
+          type: object
+          properties:
+            total:
+              type: integer
+            page:
+              type: integer
+            limit:
+              type: integer
+            totalPages:
+              type: integer
     StudentApplicationDetails:
       type: object
       properties:

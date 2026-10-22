@@ -119,6 +119,7 @@ model User {
 
   managedApplications       StudentApplication[]        @relation("ApplicationManager")
   officerApplications       StudentApplication[]        @relation("AdmissionTeamOfficer")
+  counselorApplications     StudentApplication[]        @relation("Counselor")
   // studentApplications StudentApplication[] @relation("Counselor")
   // sessions            Sessions[]
   students                  Student[]
@@ -352,6 +353,9 @@ model StudentApplication {
 
   managerId Int?
   Manager   User? @relation("ApplicationManager", fields: [managerId], references: [id])
+
+  counselorId Int?
+  Counselor   User? @relation("Counselor", fields: [counselorId], references: [id])
 
   // counselorId Int?
   // Counselor   User? @relation("Counselor", fields: [counselorId], references: [id])
