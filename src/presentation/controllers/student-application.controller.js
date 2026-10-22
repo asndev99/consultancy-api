@@ -54,6 +54,78 @@ export const getStudentApplicationsByBranch = async (req, res, next) => {
   }
 };
 
+export const getManagerApplicationsByBranch = async (req, res, next) => {
+  try {
+    const { page, limit, counselorId, admissionOfficerId, status } = req.query;
+    const { data, pagination } =
+      await StudentApplicationUseCases.GetManagerApplicationsByBranchUseCase(
+        req,
+        req.params.branchId,
+        {
+          page: page ? Number(page) : undefined,
+          limit: limit ? Number(limit) : undefined,
+        },
+        { counselorId, admissionOfficerId, status },
+      );
+    res.status(200).json({
+      code: 0,
+      data,
+      pagination,
+      message: "Student applications fetched",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCounselorApplicationsByBranch = async (req, res, next) => {
+  try {
+    const { page, limit, status } = req.query;
+    const { data, pagination } =
+      await StudentApplicationUseCases.GetCounselorApplicationsByBranchUseCase(
+        req,
+        req.params.branchId,
+        {
+          page: page ? Number(page) : undefined,
+          limit: limit ? Number(limit) : undefined,
+        },
+        { status },
+      );
+    res.status(200).json({
+      code: 0,
+      data,
+      pagination,
+      message: "Student applications fetched",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdmissionTeamApplicationsByBranch = async (req, res, next) => {
+  try {
+    const { page, limit, status } = req.query;
+    const { data, pagination } =
+      await StudentApplicationUseCases.GetAdmissionTeamApplicationsByBranchUseCase(
+        req,
+        req.params.branchId,
+        {
+          page: page ? Number(page) : undefined,
+          limit: limit ? Number(limit) : undefined,
+        },
+        { status },
+      );
+    res.status(200).json({
+      code: 0,
+      data,
+      pagination,
+      message: "Student applications fetched",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getStudentApplicationDetails = async (req, res, next) => {
   try {
     const data =
