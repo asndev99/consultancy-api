@@ -115,9 +115,16 @@ function buildBusinessUsersWhere({ businessId, name, branchId, role, isActive })
   return {
     businessId,
     isDeleted: false,
-    role: role ?? {
-      notIn: ["Super Admin", "Business Admin"],
-    },
+    // Sub Agents are never listed, even when explicitly filtered for.
+    role: role
+      ? { equals: role, not: UserRoles["Sub Agent"] }
+      : {
+          notIn: [
+            UserRoles["Super Admin"],
+            UserRoles["Business Admin"],
+            UserRoles["Sub Agent"],
+          ],
+        },
     ...(name ? { name: { contains: name, mode: "insensitive" } } : {}),
     ...(typeof isActive === "boolean" ? { isActive } : {}),
     userBranches: {
@@ -153,6 +160,12 @@ export async function getUsersByBusinessId({
       createdAt: true,
       updatedAt: true,
       role: true,
+      userBranches: {
+        where: { deletedAt: null, Branch: { isDeleted: false } },
+        select: {
+          Branch: { select: { id: true, name: true } },
+        },
+      },
     },
     orderBy: { id: "asc" },
     skip,
