@@ -56,7 +56,16 @@ export const getStudentApplicationsByBranch = async (req, res, next) => {
 
 export const getManagerApplicationsByBranch = async (req, res, next) => {
   try {
-    const { page, limit, counselorId, admissionOfficerId, status } = req.query;
+    const {
+      page,
+      limit,
+      managerId,
+      counselorId,
+      admissionOfficerId,
+      subAgentId,
+      status,
+      searchTerm,
+    } = req.query;
     const { data, pagination } =
       await StudentApplicationUseCases.GetManagerApplicationsByBranchUseCase(
         req,
@@ -65,7 +74,14 @@ export const getManagerApplicationsByBranch = async (req, res, next) => {
           page: page ? Number(page) : undefined,
           limit: limit ? Number(limit) : undefined,
         },
-        { counselorId, admissionOfficerId, status },
+        {
+          managerId,
+          counselorId,
+          admissionOfficerId,
+          subAgentId,
+          status,
+          searchTerm,
+        },
       );
     res.status(200).json({
       code: 0,
@@ -80,7 +96,8 @@ export const getManagerApplicationsByBranch = async (req, res, next) => {
 
 export const getCounselorApplicationsByBranch = async (req, res, next) => {
   try {
-    const { page, limit, status } = req.query;
+    const { page, limit, status, managerId, admissionOfficerId, searchTerm } =
+      req.query;
     const { data, pagination } =
       await StudentApplicationUseCases.GetCounselorApplicationsByBranchUseCase(
         req,
@@ -89,7 +106,32 @@ export const getCounselorApplicationsByBranch = async (req, res, next) => {
           page: page ? Number(page) : undefined,
           limit: limit ? Number(limit) : undefined,
         },
-        { status },
+        { status, managerId, admissionOfficerId, searchTerm },
+      );
+    res.status(200).json({
+      code: 0,
+      data,
+      pagination,
+      message: "Student applications fetched",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSubAgentApplicationsByBranch = async (req, res, next) => {
+  try {
+    const { page, limit, status, managerId, admissionOfficerId, searchTerm } =
+      req.query;
+    const { data, pagination } =
+      await StudentApplicationUseCases.GetSubAgentApplicationsByBranchUseCase(
+        req,
+        req.params.branchId,
+        {
+          page: page ? Number(page) : undefined,
+          limit: limit ? Number(limit) : undefined,
+        },
+        { status, managerId, admissionOfficerId, searchTerm },
       );
     res.status(200).json({
       code: 0,

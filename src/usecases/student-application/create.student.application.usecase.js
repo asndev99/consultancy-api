@@ -55,6 +55,8 @@ export const CreateStudentApplicationUseCase = async (req, payload) => {
     branchId,
     // A Counselor creating an application is its counselor; other roles leave it unset.
     counselorId: req.user.role === UserRoles["Counselor"] ? req.user.id : null,
+    // Likewise, a Sub Agent creating an application is its sub agent.
+    subAgentId: req.user.role === UserRoles["Sub Agent"] ? req.user.id : null,
     createdBy: req.user.id,
   };
 
