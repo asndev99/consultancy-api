@@ -64,7 +64,10 @@ export const GetUsersByBusinessUseCase = async ({
   ]);
 
   return {
-    data: users,
+    data: users.map(({ userBranches, ...user }) => ({
+      ...user,
+      assignedBranches: userBranches.map((ub) => ub.Branch),
+    })),
     pagination: {
       total,
       page,

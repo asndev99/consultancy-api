@@ -579,7 +579,8 @@ paths:
         Accessible only by Business Admin and Manager. branchId is required.
         Business Admins get every user assigned to that branch. Managers only
         get results if the branch is one they themselves manage (per the
-        UserBranch model) - otherwise an empty list is returned.
+        UserBranch model) - otherwise an empty list is returned. Sub Agents are
+        never included. Each user includes assignedBranches (id and name).
       security:
         - bearerAuth: []
       parameters:
@@ -603,7 +604,10 @@ paths:
         - name: role
           in: query
           required: false
-          description: Optional filter by a single role (see UserRoles in application.constants.js)
+          description: >-
+            Optional filter by a single role (see UserRoles in
+            application.constants.js). Sub Agent is not accepted here; such
+            users are always excluded.
           schema:
             type: string
             enum:
@@ -613,7 +617,6 @@ paths:
                 "Manager",
                 "Counselor",
                 "Admission Team",
-                "Sub Agent",
               ]
         - name: isActive
           in: query
@@ -683,6 +686,18 @@ paths:
                         updatedAt:
                           type: string
                           format: date-time
+                        role:
+                          type: string
+                        assignedBranches:
+                          type: array
+                          description: Every active branch the user is assigned to
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              name:
+                                type: string
                   pagination:
                     type: object
                     properties:
