@@ -11,6 +11,52 @@ export function parseOptionalId(value, name) {
   return parsed;
 }
 
+// "0" means "not assigned yet" (matches unassignedWhere); any other value must be a valid id.
+export function buildAssignmentFilter(value, idField, unassignedWhere) {
+  if (value == null || String(value).trim() === "") return {};
+  if (Number(value) === 0) return unassignedWhere;
+  return { [idField]: parseOptionalId(value, idField) };
+}
+
+export const UnassignedWhere = {
+  manager: { isManagerAssigned: false },
+  admissionOfficer: { isAdmissionTeamAssigned: false },
+  counselor: { counselorId: null },
+};
+
+// Case-insensitive match on target university or student name; blank terms are ignored.
+export function buildSearchFilter(searchTerm) {
+  const term = typeof searchTerm === "string" ? searchTerm.trim() : "";
+  if (term === "") return {};
+  return {
+    OR: [
+      { applicationTargetUniversity: { contains: term, mode: "insensitive" } },
+      { Student: { fullName: { contains: term, mode: "insensitive" } } },
+    ],
+  };
+}
+
+// Optional status / manager / admission officer / search filters shared by the
+// counselor and sub agent views.
+export function buildOwnApplicationsFilters({
+  status,
+  managerId,
+  admissionOfficerId,
+  searchTerm,
+} = {}) {
+  const parsedStatus = parseOptionalStatus(status);
+  return {
+    ...(parsedStatus != null ? { applicationStatus: parsedStatus } : {}),
+    ...buildAssignmentFilter(managerId, "managerId", UnassignedWhere.manager),
+    ...buildAssignmentFilter(
+      admissionOfficerId,
+      "admissionOfficerId",
+      UnassignedWhere.admissionOfficer,
+    ),
+    ...buildSearchFilter(searchTerm),
+  };
+}
+
 export function parseRequiredBranchId(branchId) {
   const parsed = parseOptionalId(branchId, "branchId");
   if (parsed == null) {

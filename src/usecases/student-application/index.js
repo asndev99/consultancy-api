@@ -3,6 +3,7 @@ import { GetStudentApplicationsUseCase } from "./get.student.applications.usecas
 import { GetStudentApplicationsByBranchUseCase } from "./get.student.applications.by.branch.usecase.js";
 import { GetManagerApplicationsByBranchUseCase } from "./get.manager.applications.by.branch.usecase.js";
 import { GetCounselorApplicationsByBranchUseCase } from "./get.counselor.applications.by.branch.usecase.js";
+import { GetSubAgentApplicationsByBranchUseCase } from "./get.sub.agent.applications.by.branch.usecase.js";
 import { GetAdmissionTeamApplicationsByBranchUseCase } from "./get.admission.team.applications.by.branch.usecase.js";
 import { GetStudentApplicationDetailsUseCase } from "./get.student.application.details.usecase.js";
 import { GetStudentApplicationRemarksUseCase } from "./get.student.application.remarks.usecase.js";
@@ -17,6 +18,7 @@ const StudentApplicationUseCases = {
   GetStudentApplicationsByBranchUseCase,
   GetManagerApplicationsByBranchUseCase,
   GetCounselorApplicationsByBranchUseCase,
+  GetSubAgentApplicationsByBranchUseCase,
   GetAdmissionTeamApplicationsByBranchUseCase,
   GetStudentApplicationDetailsUseCase,
   GetStudentApplicationRemarksUseCase,

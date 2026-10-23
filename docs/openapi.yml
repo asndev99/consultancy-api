@@ -2244,9 +2244,10 @@ paths:
         - StudentApplication
       summary: Create a student application
       description: >-
-        Accessible by Manager, Counselor and Business Admin.
+        Accessible by Manager, Counselor, Business Admin and Sub Agent.
         `createdBy` is always set to the authenticated user. When the caller is a
-        Counselor, `counselorId` is also set to the caller's id; otherwise it is null.
+        Counselor, `counselorId` is also set to the caller's id; when the caller is
+        a Sub Agent, `subAgentId` is set to the caller's id. Otherwise each is null.
       security:
         - bearerAuth: []
       requestBody:
@@ -2442,8 +2443,9 @@ paths:
       summary: Get all student applications for a branch (Manager, Business Admin)
       description: >-
         Accessible by Manager and Business Admin. Returns every application in the branch,
-        optionally filtered by counselorId, admissionOfficerId and status (all
-        optional). Scoped to the user's businessId and active (isActive true,
+        optionally filtered by managerId, counselorId, admissionOfficerId,
+        subAgentId, status and searchTerm (all optional, ignored when missing or
+        empty). Scoped to the user's businessId and active (isActive true,
         deletedAt null) applications.
       security:
         - bearerAuth: []
@@ -2465,18 +2467,50 @@ paths:
           schema:
             type: integer
             default: 10
+        - name: managerId
+          in: query
+          required: false
+          description: >-
+            Optional. 0 returns only applications with no manager assigned
+            (isManagerAssigned false); any other value filters by that manager's
+            id within the branch.
+          schema:
+            type: integer
+            minimum: 0
         - name: counselorId
           in: query
           required: false
-          description: Optional filter by counselor
+          description: >-
+            Optional. 0 returns only applications with no counselor (counselorId
+            null); any other value filters by that counselor's id.
           schema:
             type: integer
+            minimum: 0
         - name: admissionOfficerId
           in: query
           required: false
-          description: Optional filter by assigned admission officer
+          description: >-
+            Optional. 0 returns only applications with no admission officer
+            assigned (isAdmissionTeamAssigned false); any other value filters by
+            that admission officer's id.
           schema:
             type: integer
+            minimum: 0
+        - name: subAgentId
+          in: query
+          required: false
+          description: Optional filter by sub agent id
+          schema:
+            type: integer
+            minimum: 1
+        - name: searchTerm
+          in: query
+          required: false
+          description: >-
+            Optional case-insensitive search on applicationTargetUniversity or the
+            student's fullName. Ignored when empty.
+          schema:
+            type: string
         - name: status
           in: query
           required: false
@@ -2501,7 +2535,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/StudentApplicationBranchList"
         "400":
-          description: Validation failed - invalid branchId, page, limit, counselorId, admissionOfficerId or status
+          description: Validation failed - invalid branchId, page, limit, managerId, counselorId, admissionOfficerId, subAgentId or status
         "401":
           description: Unauthorized
         "403":
@@ -2535,6 +2569,33 @@ paths:
           schema:
             type: integer
             default: 10
+        - name: managerId
+          in: query
+          required: false
+          description: >-
+            Optional. 0 returns only applications with no manager assigned
+            (isManagerAssigned false); any other value filters by that manager's id.
+          schema:
+            type: integer
+            minimum: 0
+        - name: admissionOfficerId
+          in: query
+          required: false
+          description: >-
+            Optional. 0 returns only applications with no admission officer
+            assigned (isAdmissionTeamAssigned false); any other value filters by
+            that admission officer's id.
+          schema:
+            type: integer
+            minimum: 0
+        - name: searchTerm
+          in: query
+          required: false
+          description: >-
+            Optional case-insensitive search on applicationTargetUniversity or the
+            student's fullName. Ignored when empty.
+          schema:
+            type: string
         - name: status
           in: query
           required: false
@@ -2559,7 +2620,93 @@ paths:
               schema:
                 $ref: "#/components/schemas/StudentApplicationBranchList"
         "400":
-          description: Validation failed - invalid branchId, page, limit or status
+          description: Validation failed - invalid branchId, page, limit, status, managerId or admissionOfficerId
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+  /student-application/sub-agent/branch/{branchId}:
+    get:
+      tags:
+        - StudentApplication
+      summary: Get the logged-in sub agent's student applications for a branch
+      description: >-
+        Accessible by Sub Agent only. Returns applications in the branch whose
+        subAgentId is the authenticated user. Scoped to the user's businessId
+        and active (isActive true, deletedAt null) applications. All filters are
+        optional and ignored when missing or empty.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: managerId
+          in: query
+          required: false
+          description: >-
+            Optional. 0 returns only applications with no manager assigned
+            (isManagerAssigned false); any other value filters by that manager's id.
+          schema:
+            type: integer
+            minimum: 0
+        - name: admissionOfficerId
+          in: query
+          required: false
+          description: >-
+            Optional. 0 returns only applications with no admission officer
+            assigned (isAdmissionTeamAssigned false); any other value filters by
+            that admission officer's id.
+          schema:
+            type: integer
+            minimum: 0
+        - name: searchTerm
+          in: query
+          required: false
+          description: >-
+            Optional case-insensitive search on applicationTargetUniversity or the
+            student's fullName. Ignored when empty.
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: Optional filter on applicationStatus
+          schema:
+            type: string
+            enum:
+              [
+                "Draft",
+                "Under Review",
+                "Pending Documents",
+                "Offer Letter Issued",
+                "Visa Processing",
+                "Enrolled",
+                "Rejected",
+              ]
+      responses:
+        "200":
+          description: Student applications fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentApplicationBranchList"
+        "400":
+          description: Validation failed - invalid branchId, page, limit, status, managerId or admissionOfficerId
         "401":
           description: Unauthorized
         "403":
@@ -5145,6 +5292,10 @@ components:
           type: integer
           nullable: true
           description: Set to the creator's id when the application is created by a Counselor
+        subAgentId:
+          type: integer
+          nullable: true
+          description: Set to the creator's id when the application is created by a Sub Agent
         createdBy:
           type: integer
         Manager:

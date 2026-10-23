@@ -10,6 +10,7 @@ import {
   getStudentApplicationsByBranch,
   getManagerApplicationsByBranch,
   getCounselorApplicationsByBranch,
+  getSubAgentApplicationsByBranch,
   getAdmissionTeamApplicationsByBranch,
   getStudentApplicationDetails,
   getStudentApplicationRemarks,
@@ -30,7 +31,7 @@ const manageStudentApplicationRoles = [
 studentApplicationRouter.post(
   "/",
   authMiddleware,
-  verifyRole(manageStudentApplicationRoles),
+  verifyRole([...manageStudentApplicationRoles, UserRoles["Sub Agent"]]),
   validateBody(studentApplicationSchemas.CreateStudentApplicationSchema),
   createStudentApplication,
 );
@@ -61,6 +62,13 @@ studentApplicationRouter.get(
   authMiddleware,
   verifyRole([UserRoles["Counselor"]]),
   getCounselorApplicationsByBranch,
+);
+
+studentApplicationRouter.get(
+  "/sub-agent/branch/:branchId",
+  authMiddleware,
+  verifyRole([UserRoles["Sub Agent"]]),
+  getSubAgentApplicationsByBranch,
 );
 
 studentApplicationRouter.get(

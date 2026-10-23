@@ -1,6 +1,6 @@
 import {
+  buildOwnApplicationsFilters,
   listBranchApplications,
-  parseOptionalStatus,
   parseRequiredBranchId,
 } from "./branch.applications.query.js";
 
@@ -9,14 +9,12 @@ export const GetCounselorApplicationsByBranchUseCase = async (
   req,
   branchId,
   pagination,
-  { status } = {},
+  filters,
 ) => {
-  const parsedStatus = parseOptionalStatus(status);
-
   const where = {
     branchId: parseRequiredBranchId(branchId),
     counselorId: req.user.id,
-    ...(parsedStatus != null ? { applicationStatus: parsedStatus } : {}),
+    ...buildOwnApplicationsFilters(filters),
   };
 
   return listBranchApplications(req, where, pagination);
