@@ -3,7 +3,10 @@ import BusinessRepository from "../../Infra/db/repositories/business/index.js";
 import BranchRepository from "../../Infra/db/repositories/branch/index.js";
 import StudentRepository from "../../Infra/db/repositories/student/index.js";
 import { NotFoundException } from "../../shared/error.js";
-import { UserRoles } from "../../shared/application.constants.js";
+import {
+  ApplicationStatus,
+  UserRoles,
+} from "../../shared/application.constants.js";
 import { generateApplicationId } from "../../shared/utils.js";
 
 const MAX_APPLICATION_ID_ATTEMPTS = 5;
@@ -50,6 +53,9 @@ export const CreateStudentApplicationUseCase = async (req, payload) => {
     applicationTutionFeePeriod,
     tutionFeeCurrency: tutionFeeCurrency ?? "N/A",
     targetCountry: targetCountry ?? null,
+    // An application counts as submitted once it leaves Draft.
+    applicationSubmittedAt:
+      applicationStatus !== ApplicationStatus.Draft ? new Date() : null,
     studentId,
     businessId,
     branchId,

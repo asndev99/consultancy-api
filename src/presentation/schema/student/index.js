@@ -44,6 +44,11 @@ export default {
       targetDegree: {
         type: "string",
       },
+      leadSource: {
+        type: "string",
+        minLength: 1,
+        maxLength: 100,
+      },
       counselorId: {
         type: "integer",
         minimum: 1,
@@ -145,6 +150,11 @@ export default {
       },
       targetDegree: {
         type: "string",
+      },
+      leadSource: {
+        type: "string",
+        minLength: 1,
+        maxLength: 100,
       },
       leadStage: {
         type: "string",
