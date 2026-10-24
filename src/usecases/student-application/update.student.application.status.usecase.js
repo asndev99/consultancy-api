@@ -1,5 +1,6 @@
 import StudentApplicationRepository from "../../Infra/db/repositories/student-application/index.js";
 import { NotFoundException } from "../../shared/error.js";
+import { ApplicationStatus } from "../../shared/application.constants.js";
 
 export const UpdateStudentApplicationStatusUseCase = async (
   req,
@@ -22,6 +23,11 @@ export const UpdateStudentApplicationStatusUseCase = async (
     application.id,
     {
       applicationStatus,
+      // Stamped the first time the application leaves Draft.
+      ...(application.applicationSubmittedAt == null &&
+      applicationStatus !== ApplicationStatus.Draft
+        ? { applicationSubmittedAt: new Date() }
+        : {}),
       updatedBy: req.user.id,
     },
     businessId,
