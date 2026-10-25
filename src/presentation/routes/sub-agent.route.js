@@ -10,6 +10,7 @@ import {
   assignSubAgentBranch,
   editSubAgent,
   updateSubAgentStatus,
+  getSubAgentApplications,
 } from "../controllers/sub-agent.controller.js";
 
 const subAgentRouter = express.Router();
@@ -44,6 +45,13 @@ subAgentRouter.get(
 );
 
 // :subAgentId is the SubAgentBranchProfile id returned by the list endpoint.
+subAgentRouter.get(
+  "/:subAgentId/branch/:branchId/applications",
+  authMiddleware,
+  verifyRole(manageSubAgentRoles),
+  getSubAgentApplications,
+);
+
 subAgentRouter.patch(
   "/:subAgentId/status",
   authMiddleware,

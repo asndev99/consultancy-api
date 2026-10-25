@@ -173,6 +173,23 @@ export async function BulkUpdateStudentCounselor(
   });
 }
 
+export async function SoftDeleteStudents(studentIds, deletedBy, businessId) {
+  return prisma.student.updateMany({
+    where: {
+      id: { in: studentIds },
+      isDeleted: false,
+      // Super Admins have no businessId, so they aren't scoped to one business.
+      ...(businessId != null ? { businessId } : {}),
+    },
+    data: {
+      isDeleted: true,
+      deletedAt: new Date(),
+      deletedBy,
+      updatedBy: deletedBy,
+    },
+  });
+}
+
 function targetUniversityInclude() {
   return {
     University: {

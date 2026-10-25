@@ -187,4 +187,20 @@ export default {
     required: ["studentIds", "counselorId"],
     additionalProperties: false,
   },
+  BulkDeleteStudentsSchema: {
+    $id: "https://example.com/schemas/bulk-delete-students.json",
+    type: "object",
+    properties: {
+      studentIds: {
+        type: "array",
+        minItems: 1,
+        items: {
+          type: "integer",
+          minimum: 1,
+        },
+      },
+    },
+    required: ["studentIds"],
+    additionalProperties: false,
+  },
 };

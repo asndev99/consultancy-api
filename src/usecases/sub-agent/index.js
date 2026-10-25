@@ -3,6 +3,7 @@ import { GetSubAgentsByBranchUseCase } from "./get.sub.agents.by.branch.usecase.
 import { AssignSubAgentBranchUseCase } from "./assign.sub.agent.branch.usecase.js";
 import { EditSubAgentUseCase } from "./edit.sub.agent.usecase.js";
 import { UpdateSubAgentStatusUseCase } from "./update.sub.agent.status.usecase.js";
+import { GetSubAgentApplicationsUseCase } from "./get.sub.agent.applications.usecase.js";
 
 const SubAgentUseCases = {
   RegisterSubAgentUseCase,
@@ -10,6 +11,7 @@ const SubAgentUseCases = {
   AssignSubAgentBranchUseCase,
   EditSubAgentUseCase,
   UpdateSubAgentStatusUseCase,
+  GetSubAgentApplicationsUseCase,
 };
 
 export default SubAgentUseCases;
