@@ -33,6 +33,12 @@ export const ResendInviteUseCase = async (req, userId) => {
     user.businessId,
   );
 
+  // Captured before signing so the new token's iat is never earlier than
+  // inviteSentAt; AcceptInviteUseCase rejects tokens issued before it, which
+  // invalidates older links. It's only saved once the email has gone out, so
+  // a failed send leaves the previous links working.
+  const inviteSentAt = new Date();
+
   const inviteToken = generateInviteToken({
     purpose: "invite",
     userId: user.id,
@@ -48,5 +54,5 @@ export const ResendInviteUseCase = async (req, userId) => {
     inviteLink,
   });
 
-  return UserRepository.updateUserById(user.id, { inviteSentAt: new Date() });
+  return UserRepository.updateUserById(user.id, { inviteSentAt });
 };

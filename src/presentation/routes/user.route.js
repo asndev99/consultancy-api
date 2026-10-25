@@ -7,6 +7,7 @@ import {
   updateUser,
   acceptInvite,
   resendInvite,
+  cancelInvite,
   whoAmI,
   changePassword,
   assignUserBranch,
@@ -57,6 +58,18 @@ userRouter.post(
   ]),
   validateBody(userSchemas.ResendInviteSchema),
   resendInvite,
+);
+
+userRouter.patch(
+  "/cancel-invite",
+  authMiddleware,
+  verifyRole([
+    UserRoles["Business Admin"],
+    UserRoles["Super Admin"],
+    UserRoles["Manager"],
+  ]),
+  validateBody(userSchemas.CancelInviteSchema),
+  cancelInvite,
 );
 
 userRouter.post(

@@ -3,11 +3,18 @@ import { UserRoles } from "../../shared/application.constants.js";
 import { BadRequestException } from "../../shared/error.js";
 import { formatSubAgentProfile } from "./find.sub.agent.profile.js";
 
-export const GetSubAgentsByBranchUseCase = async (req, branchId) => {
+export const GetSubAgentsByBranchUseCase = async (
+  req,
+  branchId,
+  searchTerm,
+) => {
   const parsedBranchId = Number(branchId);
   if (!Number.isInteger(parsedBranchId) || parsedBranchId <= 0) {
     throw new BadRequestException("Invalid branchId");
   }
+
+  const trimmedSearchTerm =
+    typeof searchTerm === "string" ? searchTerm.trim() : "";
 
   // Managers only see the sub agent's branches they also manage.
   const managerUserId =
@@ -17,6 +24,7 @@ export const GetSubAgentsByBranchUseCase = async (req, branchId) => {
     req.user.businessId || null,
     parsedBranchId,
     managerUserId,
+    trimmedSearchTerm,
   );
 
   return profiles.map((profile) => ({

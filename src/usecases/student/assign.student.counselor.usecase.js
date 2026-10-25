@@ -1,6 +1,11 @@
 import StudentRepository from "../../Infra/db/repositories/student/index.js";
 import UserRepository from "../../Infra/db/repositories/user/index.js";
-import { UserRoles } from "../../shared/application.constants.js";
+import { enqueueNotification } from "../../Infra/queue/notification.queue.js";
+import {
+  UserRoles,
+  NotificationEventType,
+  NotificationScreen,
+} from "../../shared/application.constants.js";
 import { NotFoundException, BadRequestException } from "../../shared/error.js";
 
 export const AssignStudentCounselorUseCase = async (req, payload) => {
@@ -39,6 +44,26 @@ export const AssignStudentCounselorUseCase = async (req, payload) => {
     },
     businessId,
   );
+
+  // Unassigning (counselorId null) or self-assigning has no one to notify.
+  if (counselorId != null && counselorId !== req.user.id) {
+    await Promise.all(
+      existingStudents.map((student) =>
+        enqueueNotification({
+          eventType: NotificationEventType.StudentCounselorAssigned,
+          screen: NotificationScreen.StudentProfile,
+          title: "Student Assigned",
+          message: `You have been assigned as counselor for ${student.fullName}`,
+          metadata: { studentId: student.id },
+          businessId: student.businessId,
+          branchId: student.branchId,
+          actorId: req.user.id,
+          isFromSystem: false,
+          recipientIds: [counselorId],
+        }),
+      ),
+    );
+  }
 
   return { studentIds, counselorId };
 };

@@ -37,6 +37,7 @@ model Business {
   students            Student[]
   branches            Branch[]
   leadForms           LeadForms[]
+  notifications       Notification[]
 }
 
 model Branch {
@@ -74,6 +75,7 @@ model Branch {
   studentApplications StudentApplication[]
   students            Student[]
   leadForms           LeadForms[]
+  notifications       Notification[]
 }
 
 model User {
@@ -125,6 +127,8 @@ model User {
   // sessions            Sessions[]
   students                  Student[]
   studentApplicationRemarks StudentApplicationRemarks[]
+  notificationRecipients    NotificationRecipient[]     @relation("NotificationRecipientUser")
+  actedNotifications        Notification[]              @relation("NotificationActor")
 
   @@unique([businessId, email])
 }
@@ -592,6 +596,57 @@ model LeadSubmissions {
   createdAt DateTime  @default(now()) @db.Timestamptz()
   updatedAt DateTime  @updatedAt @db.Timestamptz()
   deletedAt DateTime? @db.Timestamptz()
+}
+
+// eventType / screen hold values from NotificationEventType / NotificationScreen
+// in src/shared/application.constants.js.
+model Notification {
+  id Int @id @default(autoincrement())
+
+  eventType String
+  screen    String
+
+  title    String
+  message  String
+  metadata Json   @default("{}")
+
+  isFromSystem Boolean @default(true)
+
+  // User who performed the action; null for system-generated notifications.
+  actorId Int?
+  Actor   User? @relation("NotificationActor", fields: [actorId], references: [id])
+
+  businessId Int
+  Business   Business @relation(fields: [businessId], references: [id])
+
+  branchId Int
+  Branch   Branch @relation(fields: [branchId], references: [id])
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
+
+  recipients NotificationRecipient[]
+
+  @@index([branchId, createdAt])
+  @@index([businessId, createdAt])
+}
+
+// Involved users get a row when the notification is created. Managers and
+// Business Admins get one (upserted) when they mark a notification read.
+model NotificationRecipient {
+  id Int @id @default(autoincrement())
+
+  notificationId Int
+  Notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  userId Int
+  User   User @relation("NotificationRecipientUser", fields: [userId], references: [id])
+
+  readAt    DateTime? @db.Timestamptz()
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+
+  @@unique([notificationId, userId])
+  @@index([userId, readAt])
 }
 
 // model Sessions {

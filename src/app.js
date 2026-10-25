@@ -14,7 +14,9 @@ import studentApplicationRemarksRouter from "./presentation/routes/student-appli
 import leadFormRouter from "./presentation/routes/lead-form.route.js";
 import subAgentRouter from "./presentation/routes/sub-agent.route.js";
 import dashboardRouter from "./presentation/routes/dashboard.route.js";
+import notificationRouter from "./presentation/routes/notification.route.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
+import "./Infra/queue/notification.worker.js";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import cors from "cors";
@@ -50,6 +52,7 @@ app.use("/student-application-remarks", studentApplicationRemarksRouter);
 app.use("/lead-form", leadFormRouter);
 app.use("/sub-agent", subAgentRouter);
 app.use("/dashboard", dashboardRouter);
+app.use("/notification", notificationRouter);
 
 app.use(errorMiddleware);
 

@@ -4,7 +4,17 @@ import StudentRepository from "../../Infra/db/repositories/student/index.js";
 import UserRepository from "../../Infra/db/repositories/user/index.js";
 import { BadRequestException, NotFoundException } from "../../shared/error.js";
 import { generateStudentCode } from "../../shared/utils.js";
-import { UserRoles } from "../../shared/application.constants.js";
+import { enqueueNotification } from "../../Infra/queue/notification.queue.js";
+import {
+  UserRoles,
+  NotificationEventType,
+  NotificationScreen,
+} from "../../shared/application.constants.js";
+
+const rolesNotifyingManagersOnCreate = [
+  UserRoles.Counselor,
+  UserRoles["Sub Agent"],
+];
 
 export const CreateStudentUseCase = async (req, payload) => {
   const existingStudent =
@@ -38,9 +48,34 @@ export const CreateStudentUseCase = async (req, payload) => {
   const { studentSequence, businessCode } =
     await BusinessRepository.IncrementStudentSequence(payload.businessId);
 
-  return StudentRepository.CreateStudent({
+  const student = await StudentRepository.CreateStudent({
     ...payload,
     studentNo: generateStudentCode(businessCode, studentSequence),
     createdBy: req.user.id,
   });
+
+  if (rolesNotifyingManagersOnCreate.includes(req.user.role)) {
+    const managers = await UserRepository.FindUsersByBranchAndRole(
+      student.businessId,
+      student.branchId,
+      UserRoles.Manager,
+    );
+
+    if (managers.length > 0) {
+      await enqueueNotification({
+        eventType: NotificationEventType.StudentCreated,
+        screen: NotificationScreen.StudentProfile,
+        title: "Student Created",
+        message: `${req.user.name} (${req.user.role}) created student ${student.fullName}`,
+        metadata: { studentId: student.id },
+        businessId: student.businessId,
+        branchId: student.branchId,
+        actorId: req.user.id,
+        isFromSystem: false,
+        recipientIds: managers.map((manager) => manager.id),
+      });
+    }
+  }
+
+  return student;
 };
