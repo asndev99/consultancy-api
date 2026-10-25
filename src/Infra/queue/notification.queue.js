@@ -14,6 +14,10 @@ export const notificationQueue = new Queue(NOTIFICATION_QUEUE_NAME, {
   },
 });
 
+notificationQueue.on("error", (error) => {
+  logger.error(`Notification queue error: ${error.message || error.code}`);
+});
+
 /**
  * payload: {
  *   eventType, screen, title, message, metadata,
@@ -22,13 +26,28 @@ export const notificationQueue = new Queue(NOTIFICATION_QUEUE_NAME, {
  *
  * Never throws: a notification failing to enqueue must not fail the action
  * that triggered it, since that action has already been committed.
+ * queue.add() waits indefinitely while Redis is unreachable, so it's capped
+ * to keep the API request from hanging.
  */
+const ENQUEUE_TIMEOUT_MS = 3000;
+
 export const enqueueNotification = async (payload) => {
+  let timer;
   try {
-    await notificationQueue.add(payload.eventType, payload);
+    await Promise.race([
+      notificationQueue.add(payload.eventType, payload),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("timed out waiting for Redis")),
+          ENQUEUE_TIMEOUT_MS,
+        );
+      }),
+    ]);
   } catch (error) {
     logger.error(
       `Failed to enqueue notification "${payload.eventType}": ${error.message}`,
     );
+  } finally {
+    clearTimeout(timer);
   }
 };

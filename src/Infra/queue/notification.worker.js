@@ -43,6 +43,10 @@ export const notificationWorker = new Worker(
   { connection: queueConnection },
 );
 
+notificationWorker.on("error", (error) => {
+  logger.error(`Notification worker error: ${error.message || error.code}`);
+});
+
 notificationWorker.on("failed", (job, error) => {
   logger.error(
     `Notification job ${job?.id} (${job?.name}) failed: ${error.message}`,
