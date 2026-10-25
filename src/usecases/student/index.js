@@ -9,6 +9,8 @@ import { UpdateTargetUniversitiesUseCase } from "./update.target.universities.us
 import { AddTargetUniversityCoursesUseCase } from "./add.target.university.courses.usecase.js";
 import { DeleteTargetUniversityUseCase } from "./delete.target.university.usecase.js";
 import { DeleteTargetUniversityCourseUseCase } from "./delete.target.university.course.usecase.js";
+import { DeleteStudentUseCase } from "./delete.student.usecase.js";
+import { BulkDeleteStudentsUseCase } from "./bulk.delete.students.usecase.js";
 
 const StudentUseCases = {
   CreateStudentUseCase,
@@ -22,6 +24,8 @@ const StudentUseCases = {
   AddTargetUniversityCoursesUseCase,
   DeleteTargetUniversityUseCase,
   DeleteTargetUniversityCourseUseCase,
+  DeleteStudentUseCase,
+  BulkDeleteStudentsUseCase,
 };
 
 export default StudentUseCases;

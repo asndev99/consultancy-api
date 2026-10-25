@@ -38,6 +38,7 @@ model Business {
   branches            Branch[]
   leadForms           LeadForms[]
   notifications       Notification[]
+  helpAndFeedbacks    HelpAndFeedback[]
 }
 
 model Branch {
@@ -129,6 +130,7 @@ model User {
   studentApplicationRemarks StudentApplicationRemarks[]
   notificationRecipients    NotificationRecipient[]     @relation("NotificationRecipientUser")
   actedNotifications        Notification[]              @relation("NotificationActor")
+  helpAndFeedbacks          HelpAndFeedback[]
 
   @@unique([businessId, email])
 }
@@ -647,6 +649,26 @@ model NotificationRecipient {
 
   @@unique([notificationId, userId])
   @@index([userId, readAt])
+}
+
+// category / priorityLevel hold values from HelpAndFeedbackCategory /
+// HelpAndFeedbackPriorityLevel in src/shared/application.constants.js.
+
+model HelpAndFeedback {
+  id            Int      @id @default(autoincrement())
+  subject       String
+  description   String
+  category      String
+  priorityLevel String
+  businessId    Int
+  Business      Business @relation(fields: [businessId], references: [id])
+
+  userId Int
+  User   User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime  @default(now()) @db.Timestamptz()
+  updatedAt DateTime  @updatedAt @db.Timestamptz()
+  deletedAt DateTime? @db.Timestamptz()
 }
 
 // model Sessions {

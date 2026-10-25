@@ -16,6 +16,8 @@ import {
   addTargetUniversityCourses,
   deleteTargetUniversity,
   deleteTargetUniversityCourse,
+  deleteStudent,
+  bulkDeleteStudents,
 } from "../controllers/student.controller.js";
 
 const studentRouter = express.Router();
@@ -68,6 +70,22 @@ studentRouter.patch(
   verifyRole(manageStudentRecordRoles),
   validateBody(studentSchemas.AssignStudentCounselorSchema),
   assignStudentCounselor,
+);
+
+// Registered before "/:studentId" so "bulk" isn't matched as a studentId param.
+studentRouter.delete(
+  "/bulk",
+  authMiddleware,
+  verifyRole(manageStudentRoles),
+  validateBody(studentSchemas.BulkDeleteStudentsSchema),
+  bulkDeleteStudents,
+);
+
+studentRouter.delete(
+  "/:studentId",
+  authMiddleware,
+  verifyRole(manageStudentRoles),
+  deleteStudent,
 );
 
 studentRouter.patch(

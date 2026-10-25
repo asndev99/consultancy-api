@@ -15,6 +15,7 @@ import leadFormRouter from "./presentation/routes/lead-form.route.js";
 import subAgentRouter from "./presentation/routes/sub-agent.route.js";
 import dashboardRouter from "./presentation/routes/dashboard.route.js";
 import notificationRouter from "./presentation/routes/notification.route.js";
+import helpAndFeedbackRouter from "./presentation/routes/help-and-feedback.route.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 import "./Infra/queue/notification.worker.js";
 import swaggerUi from "swagger-ui-express";
@@ -53,6 +54,7 @@ app.use("/lead-form", leadFormRouter);
 app.use("/sub-agent", subAgentRouter);
 app.use("/dashboard", dashboardRouter);
 app.use("/notification", notificationRouter);
+app.use("/help-and-feedback", helpAndFeedbackRouter);
 
 app.use(errorMiddleware);
 

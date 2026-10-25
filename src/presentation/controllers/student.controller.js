@@ -157,3 +157,27 @@ export const deleteTargetUniversityCourse = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteStudent = async (req, res, next) => {
+  try {
+    const data = await StudentUseCases.DeleteStudentUseCase(
+      req,
+      req.params.studentId,
+    );
+    res.status(200).json({ code: 0, data, message: "Student deleted" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const bulkDeleteStudents = async (req, res, next) => {
+  try {
+    const data = await StudentUseCases.BulkDeleteStudentsUseCase(
+      req,
+      req.body,
+    );
+    res.status(200).json({ code: 0, data, message: "Students deleted" });
+  } catch (error) {
+    next(error);
+  }
+};

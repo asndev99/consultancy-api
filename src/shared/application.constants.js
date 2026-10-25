@@ -64,3 +64,19 @@ export const NotificationScreen = {
   ApplicationDetails: "ApplicationDetails",
   ApplicationRemarks: "ApplicationRemarks",
 };
+
+// Stored as plain strings on HelpAndFeedback.category (no Prisma enum).
+export const HelpAndFeedbackCategory = {
+  "General Questions": "General Questions",
+  "Feature Request": "Feature Request",
+  "Bug Report": "Bug Report",
+  "Billing & Account": "Billing & Account",
+};
+
+// Stored as plain strings on HelpAndFeedback.priorityLevel (no Prisma enum).
+export const HelpAndFeedbackPriorityLevel = {
+  Low: "Low",
+  Medium: "Medium",
+  High: "High",
+  Urgent: "Urgent",
+};

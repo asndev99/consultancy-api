@@ -63,3 +63,29 @@ export const registerSubAgent = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getSubAgentApplications = async (req, res, next) => {
+  try {
+    const { page, limit, status, managerId, admissionOfficerId, searchTerm } =
+      req.query;
+    const { data, pagination } =
+      await SubAgentUseCases.GetSubAgentApplicationsUseCase(
+        req,
+        req.params.subAgentId,
+        req.params.branchId,
+        {
+          page: page ? Number(page) : undefined,
+          limit: limit ? Number(limit) : undefined,
+        },
+        { status, managerId, admissionOfficerId, searchTerm },
+      );
+    res.status(200).json({
+      code: 0,
+      data,
+      pagination,
+      message: "Sub agent applications fetched",
+    });
+  } catch (error) {
+    next(error);
+  }
+};

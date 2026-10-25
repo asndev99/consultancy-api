@@ -1386,6 +1386,114 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: Student not found
+    delete:
+      tags:
+        - Student
+      summary: Soft-delete a student
+      description: >-
+        Accessible by Sub Agent, Counselor, Manager and Business Admin. Scoped
+        to the authenticated user's businessId. Sets isDeleted, deletedAt and
+        deletedBy on the student; the row is kept. The student's applications,
+        documents and target universities are not changed.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student deleted
+                  data:
+                    type: object
+                    properties:
+                      studentId:
+                        type: integer
+                        example: 3
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Student not found or already deleted
+  /student/bulk:
+    delete:
+      tags:
+        - Student
+      summary: Soft-delete multiple students
+      description: >-
+        Accessible by Sub Agent, Counselor, Manager and Business Admin. Scoped
+        to the authenticated user's businessId. All-or-nothing - if any
+        studentId doesn't exist, is already deleted, or is outside the user's
+        business, nothing is deleted and 404 is returned. Duplicate IDs are
+        ignored. Sets isDeleted, deletedAt and deletedBy on each student; the
+        students' applications, documents and target universities are not
+        changed.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - studentIds
+              additionalProperties: false
+              properties:
+                studentIds:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: integer
+                    minimum: 1
+                  example: [3, 4, 5]
+      responses:
+        "200":
+          description: Students deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Students deleted
+                  data:
+                    type: object
+                    properties:
+                      studentIds:
+                        type: array
+                        items:
+                          type: integer
+                        example: [3, 4, 5]
+                      deletedCount:
+                        type: integer
+                        example: 3
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: One or more students were not found
   /student/branch/{branchId}:
     get:
       tags:
@@ -3783,6 +3891,102 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden - insufficient permissions
+  /sub-agent/{subAgentId}/branch/{branchId}/applications:
+    get:
+      tags:
+        - SubAgent
+      summary: Get a sub agent's student applications for a branch
+      description: >-
+        Accessible by Business Admin, Super Admin and Manager. subAgentId is the
+        SubAgentBranchProfile id returned by GET /sub-agent/branch/{branchId}
+        (the same id the other /sub-agent/{subAgentId} endpoints take). Returns
+        applications in the branch brought in by that sub agent. The profile
+        must belong to the given branch, otherwise 404. Scoped to the user's businessId
+        and active (isActive true, deletedAt null) applications. All filters are
+        optional and ignored when missing or empty.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: subAgentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: managerId
+          in: query
+          required: false
+          description: >-
+            Optional. 0 returns only applications with no manager assigned
+            (isManagerAssigned false); any other value filters by that manager's id.
+          schema:
+            type: integer
+            minimum: 0
+        - name: admissionOfficerId
+          in: query
+          required: false
+          description: >-
+            Optional. 0 returns only applications with no admission officer
+            assigned (isAdmissionTeamAssigned false); any other value filters by
+            that admission officer's id.
+          schema:
+            type: integer
+            minimum: 0
+        - name: searchTerm
+          in: query
+          required: false
+          description: >-
+            Optional case-insensitive search on applicationTargetUniversity or the
+            student's fullName. Ignored when empty.
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: Optional filter on applicationStatus
+          schema:
+            type: string
+            enum:
+              [
+                "Draft",
+                "Under Review",
+                "Pending Documents",
+                "Offer Letter Issued",
+                "Visa Processing",
+                "Enrolled",
+                "Rejected",
+              ]
+      responses:
+        "200":
+          description: Sub agent applications fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentApplicationBranchList"
+        "400":
+          description: Validation failed - invalid branchId, page, limit, status, managerId or admissionOfficerId
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Sub agent not found, or not in this branch
   /lead-form:
     get:
       tags:
@@ -5518,6 +5722,99 @@ paths:
           description: Invalid page, pageSize or isRead
         "401":
           description: Unauthorized
+  /help-and-feedback:
+    post:
+      tags:
+        - Help And Feedback
+      summary: Submit a help or feedback request
+      description: >-
+        Accessible by Business Admin and Manager. businessId and userId are
+        taken from the authenticated user. subject and description are
+        trimmed before saving.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - subject
+                - description
+                - category
+                - priorityLevel
+              additionalProperties: false
+              properties:
+                subject:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  example: Unable to export applications
+                description:
+                  type: string
+                  minLength: 1
+                  maxLength: 5000
+                  example: The export button on the applications page does nothing.
+                category:
+                  type: string
+                  enum:
+                    - General Questions
+                    - Feature Request
+                    - Bug Report
+                    - Billing & Account
+                  example: Bug Report
+                priorityLevel:
+                  type: string
+                  enum:
+                    - Low
+                    - Medium
+                    - High
+                    - Urgent
+                  example: High
+      responses:
+        "201":
+          description: Help and feedback submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Help and feedback submitted
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      subject:
+                        type: string
+                      description:
+                        type: string
+                      category:
+                        type: string
+                        example: Bug Report
+                      priorityLevel:
+                        type: string
+                        example: High
+                      businessId:
+                        type: integer
+                      userId:
+                        type: integer
+                      createdAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
 components:
   schemas:
     StudentApplicationRemark:
