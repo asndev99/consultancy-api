@@ -43,3 +43,24 @@ export const LeadFormType = {
   ORG_LEVEL: "ORG_LEVEL",
   BRANCH_LEVEL: "BRANCH_LEVEL",
 };
+
+// Stored as plain strings on Notification.eventType (no Prisma enum).
+export const NotificationEventType = {
+  StudentCreated: "StudentCreated",
+  StudentCounselorAssigned: "StudentCounselorAssigned",
+  ApplicationCreated: "ApplicationCreated",
+  ApplicationManagerAssigned: "ApplicationManagerAssigned",
+  ApplicationAdmissionOfficerAssigned: "ApplicationAdmissionOfficerAssigned",
+  ApplicationStatusChanged: "ApplicationStatusChanged",
+  ApplicationRemarkAdded: "ApplicationRemarkAdded",
+  DocumentRequested: "DocumentRequested",
+  DocumentUploaded: "DocumentUploaded",
+};
+
+// Frontend screen a notification deep-links to; stored on Notification.screen.
+export const NotificationScreen = {
+  StudentProfile: "StudentProfile",
+  StudentDocuments: "StudentDocuments",
+  ApplicationDetails: "ApplicationDetails",
+  ApplicationRemarks: "ApplicationRemarks",
+};

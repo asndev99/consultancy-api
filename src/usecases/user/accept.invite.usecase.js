@@ -34,6 +34,23 @@ export const AcceptInviteUseCase = async (token, password) => {
     throw new BadRequestException("Invalid invite token");
   }
 
+  // Invite tokens stay valid until they expire, so without this an old link
+  // could be replayed to reset the password of an already-active user.
+  if (user.status !== UserStatus["Invitation Pending"]) {
+    throw new BadRequestException("This invite has already been used");
+  }
+
+  // Resending an invite moves inviteSentAt forward, so only the latest link
+  // works. JWT iat is in whole seconds, hence the floor.
+  if (
+    user.inviteSentAt &&
+    payload.iat < Math.floor(user.inviteSentAt.getTime() / 1000)
+  ) {
+    throw new BadRequestException(
+      "This invite link has been replaced by a newer one",
+    );
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const updatedUser = await UserRepository.updateUserById(user.id, {

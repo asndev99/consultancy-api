@@ -1,8 +1,14 @@
 import { prisma } from "../../prisma.client.js";
 
 // managerUserId, when set, limits each sub agent's `branches` list to the
-// branches that manager is also assigned to.
-export function FindSubAgentsByBranch(businessId, branchId, managerUserId) {
+// branches that manager is also assigned to. searchTerm, when non-empty, does a
+// case-insensitive match on the sub agent user's name.
+export function FindSubAgentsByBranch(
+  businessId,
+  branchId,
+  managerUserId,
+  searchTerm,
+) {
   return prisma.subAgentBranchProfile.findMany({
     where: {
       deletedAt: null,
@@ -11,7 +17,12 @@ export function FindSubAgentsByBranch(businessId, branchId, managerUserId) {
         deletedAt: null,
         // Super Admins have no businessId, so they aren't scoped to one business.
         ...(businessId != null ? { businessId } : {}),
-        User: { isDeleted: false },
+        User: {
+          isDeleted: false,
+          ...(searchTerm
+            ? { name: { contains: searchTerm, mode: "insensitive" } }
+            : {}),
+        },
       },
     },
     select: {

@@ -174,6 +174,21 @@ export default {
     required: ["userId"],
     additionalProperties: false,
   },
+  CancelInviteSchema: {
+    $id: "https://example.com/schemas/cancel-invite.json",
+    type: "object",
+    properties: {
+      userId: {
+        type: "integer",
+        minimum: 1,
+        errorMessage: {
+          minimum: "userId must be a positive integer",
+        },
+      },
+    },
+    required: ["userId"],
+    additionalProperties: false,
+  },
   AssignUserBranchSchema: {
     $id: "https://example.com/schemas/assign-user-branch.json",
     type: "object",

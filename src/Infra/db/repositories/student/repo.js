@@ -154,7 +154,7 @@ export async function FindActiveStudentsByIds(studentIds, businessId) {
       // Super Admins have no businessId, so they aren't scoped to one business.
       ...(businessId != null ? { businessId } : {}),
     },
-    select: { id: true },
+    select: { id: true, fullName: true, businessId: true, branchId: true },
   });
 }
 

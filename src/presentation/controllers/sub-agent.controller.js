@@ -5,6 +5,7 @@ export const getSubAgentsByBranch = async (req, res, next) => {
     const data = await SubAgentUseCases.GetSubAgentsByBranchUseCase(
       req,
       req.params.branchId,
+      req.query.searchTerm,
     );
     res.status(200).json({ code: 0, data, message: "Sub agents fetched" });
   } catch (error) {

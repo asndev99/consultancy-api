@@ -84,6 +84,19 @@ export const resendInvite = async (req, res, next) => {
   }
 };
 
+export const cancelInvite = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.CancelInviteUseCase(req, req.body.userId);
+    res.status(200).json({
+      code: 0,
+      data: { id: data.id, deletedAt: data.deletedAt },
+      message: "Invite cancelled",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteUser = async (req, res, next) => {
   try {
     const data = await UserUseCases.DeleteUserByBusinessUseCase(

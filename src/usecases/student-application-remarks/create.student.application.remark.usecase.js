@@ -1,5 +1,14 @@
 import StudentApplicationRepository from "../../Infra/db/repositories/student-application/index.js";
 import StudentApplicationRemarksRepository from "../../Infra/db/repositories/student-application-remarks/index.js";
+import { enqueueNotification } from "../../Infra/queue/notification.queue.js";
+import {
+  NotificationEventType,
+  NotificationScreen,
+} from "../../shared/application.constants.js";
+import {
+  resolveApplicationBranchId,
+  getApplicationStakeholderIds,
+} from "../student-application/application.notification.helpers.js";
 import { NotFoundException } from "../../shared/error.js";
 
 export const CreateStudentApplicationRemarkUseCase = async (
@@ -17,9 +26,37 @@ export const CreateStudentApplicationRemarkUseCase = async (
     throw new NotFoundException("Student application not found");
   }
 
-  return StudentApplicationRemarksRepository.CreateStudentApplicationRemark({
-    applicationId: application.id,
-    comment,
-    authorId: req.user.id,
-  });
+  const remark =
+    await StudentApplicationRemarksRepository.CreateStudentApplicationRemark({
+      applicationId: application.id,
+      comment,
+      authorId: req.user.id,
+    });
+
+  const recipientIds = getApplicationStakeholderIds(application, req.user.id);
+
+  if (recipientIds.length > 0) {
+    const branchId = await resolveApplicationBranchId(application);
+
+    if (branchId != null) {
+      await enqueueNotification({
+        eventType: NotificationEventType.ApplicationRemarkAdded,
+        screen: NotificationScreen.ApplicationRemarks,
+        title: "Comment Added",
+        message: `${req.user.name} added a comment on application ${application.applicationId}`,
+        metadata: {
+          applicationId: application.id,
+          studentId: application.studentId,
+          remarkId: remark.id,
+        },
+        businessId: application.businessId,
+        branchId,
+        actorId: req.user.id,
+        isFromSystem: false,
+        recipientIds,
+      });
+    }
+  }
+
+  return remark;
 };
