@@ -310,7 +310,9 @@ paths:
       description: >-
         Only allowed while the target user's status is still "Invitation
         Pending". Generates a fresh invite token/link and re-sends the invite
-        email, updating inviteSentAt.
+        email, updating inviteSentAt. Once the email is sent, every previously
+        sent link for this user stops working; if sending fails, inviteSentAt
+        isn't updated and the earlier links stay valid.
       security:
         - bearerAuth: []
       requestBody:
@@ -335,6 +337,63 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: User not found
+  /user/cancel-invite:
+    patch:
+      tags:
+        - Users
+      summary: Cancel a pending user's invite
+      description: >-
+        Accessible by Business Admin, Super Admin and Manager. Only allowed
+        while the target user's status is still "Invitation Pending". Soft
+        deletes the pending user, so every invite link already sent stops
+        working. Non-Super Admins can only cancel invites for users in their
+        own business.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              additionalProperties: false
+              properties:
+                userId:
+                  type: integer
+                  minimum: 1
+      responses:
+        "200":
+          description: Invite cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Invite cancelled
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 42
+                      deletedAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Validation failed, or user already accepted their invite
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions, or user belongs to another business
+        "404":
+          description: User not found
   /user/accept-invite:
     post:
       tags:
@@ -345,6 +404,10 @@ paths:
         businessId, branchId) from the query string, then sets the user's
         password, marks them active, sets status to Active, records
         inviteAcceptedAt, and marks the email as verified (isEmailVerified).
+        Rejected with 400 if the user is no longer "Invitation Pending" (the
+        invite was already used), or if the token was issued before the
+        user's inviteSentAt (a newer invite was sent, so only the latest link
+        works). Cancelled invites fail as the user is deleted.
       parameters:
         - name: token
           in: query
@@ -369,7 +432,9 @@ paths:
         "200":
           description: Invite accepted successfully
         "400":
-          description: Validation failed, or invalid/expired invite token
+          description: >-
+            Validation failed, invalid/expired invite token, invite already
+            used, or invite link replaced by a newer one
         "401":
           description: Invalid or expired invite token
   /user/delete:
@@ -3820,6 +3885,14 @@ paths:
           required: true
           schema:
             type: integer
+        - name: searchTerm
+          in: query
+          required: false
+          description: >-
+            Optional case-insensitive match on the sub agent's name. Trimmed;
+            ignored when empty.
+          schema:
+            type: string
       responses:
         "200":
           description: Sub agents fetched
