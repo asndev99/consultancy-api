@@ -1,5 +1,9 @@
 import { prisma } from "../../prisma.client.js";
-import { LeadStage, UserRoles } from "../../../../shared/application.constants.js";
+import {
+  LeadStage,
+  UserRoles,
+  UserStatus,
+} from "../../../../shared/application.constants.js";
 
 // Half-open window [from, to) on the given date column.
 const inWindow = ({ from, to }) => ({ gte: from, lt: to });
@@ -125,4 +129,62 @@ export function GroupLeadsBySource(businessId, branchId, { from, to }) {
       AND s."createdAt" < ${to}
     GROUP BY 1
     ORDER BY "leads" DESC, "source" ASC`;
+}
+
+// Per counselor (null = unassigned): students not yet enrolled, all students,
+// all enrolled, and enrolled within the window (updatedAt approximates the
+// enrolment date, as in CountEnrolledStudents).
+export function GroupStudentWorkloadByCounselor(businessId, branchId, { from, to }) {
+  return prisma.$queryRaw`
+    SELECT s."counselorId" AS "counselorId",
+           (COUNT(*) FILTER (WHERE s."leadStage"::text <> ${LeadStage.Enrolled}))::int AS "activeStudents",
+           COUNT(*)::int AS "totalStudents",
+           (COUNT(*) FILTER (WHERE s."leadStage"::text = ${LeadStage.Enrolled}))::int AS "enrolledStudents",
+           (COUNT(*) FILTER (
+             WHERE s."leadStage"::text = ${LeadStage.Enrolled}
+               AND s."updatedAt" >= ${from}
+               AND s."updatedAt" < ${to}
+           ))::int AS "enrolledInPeriod"
+    FROM "Student" s
+    WHERE s."businessId" = ${businessId}
+      AND s."branchId" = ${branchId}
+      AND s."isDeleted" = false
+    GROUP BY 1`;
+}
+
+export async function GroupOpenApplicationsByCounselor(businessId, branchId, closedStatuses) {
+  const grouped = await prisma.studentApplication.groupBy({
+    by: ["counselorId"],
+    where: {
+      businessId,
+      branchId,
+      deletedAt: null,
+      applicationStatus: { notIn: closedStatuses },
+    },
+    _count: { _all: true },
+  });
+  return grouped.map((g) => ({ counselorId: g.counselorId, count: g._count._all }));
+}
+
+// Counselors currently working the branch (active, assigned to it).
+export function FindBranchCounselors(businessId, branchId) {
+  return prisma.user.findMany({
+    where: {
+      businessId,
+      role: UserRoles.Counselor,
+      isDeleted: false,
+      status: UserStatus.Active,
+      userBranches: { some: { branchId, deletedAt: null } },
+    },
+    select: { id: true, name: true },
+  });
+}
+
+// Names for counselors who still hold branch work but no longer qualify for
+// FindBranchCounselors (deactivated, deleted or moved off the branch).
+export function FindUsersByIds(userIds) {
+  return prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, name: true },
+  });
 }

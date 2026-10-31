@@ -11,6 +11,13 @@ import {
   whoAmI,
   changePassword,
   assignUserBranch,
+  refreshSession,
+  logout,
+  logoutAll,
+  getMySessions,
+  revokeMySession,
+  deactivateUser,
+  activateUser,
 } from "../controllers/user.controller.js";
 import { verifyRole } from "../../middleware/verify.role.middleware.js";
 import { UserRoles } from "../../shared/application.constants.js";
@@ -20,6 +27,21 @@ import userSchemas from "../schema/user/index.js";
 const userRouter = express.Router();
 
 userRouter.post("/login", validateBody(userSchemas.LoginUserSchema), login);
+
+// Public: the access token may already have expired when this is called.
+userRouter.post(
+  "/refresh",
+  validateBody(userSchemas.RefreshSessionSchema),
+  refreshSession,
+);
+
+userRouter.post("/logout", authMiddleware, logout);
+
+userRouter.post("/logout-all", authMiddleware, logoutAll);
+
+userRouter.get("/sessions", authMiddleware, getMySessions);
+
+userRouter.delete("/sessions/:sessionId", authMiddleware, revokeMySession);
 
 userRouter.post(
   "/accept-invite",
@@ -78,6 +100,22 @@ userRouter.post(
   verifyRole([UserRoles["Business Admin"], UserRoles["Super Admin"]]),
   validateBody(userSchemas.AssignUserBranchSchema),
   assignUserBranch,
+);
+
+userRouter.patch(
+  "/deactivate",
+  authMiddleware,
+  verifyRole([UserRoles["Business Admin"], UserRoles["Super Admin"]]),
+  validateBody(userSchemas.DeactivateUserSchema),
+  deactivateUser,
+);
+
+userRouter.patch(
+  "/activate",
+  authMiddleware,
+  verifyRole([UserRoles["Business Admin"], UserRoles["Super Admin"]]),
+  validateBody(userSchemas.ActivateUserSchema),
+  activateUser,
 );
 
 userRouter.patch(

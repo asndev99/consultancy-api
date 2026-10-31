@@ -4,11 +4,13 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from "../../shared/error.js";
-import { generateToken, generateRefreshToken } from "../../shared/utils.js";
-import { UserRoles } from "../../shared/application.constants.js";
-import BranchRepository from "../../Infra/db/repositories/branch/index.js";
+import {
+  cacheUserAuthContext,
+  createSession,
+  resolveAssignedBranches,
+} from "../session/auth.session.js";
 
-export const LoginUserUseCase = async (payload) => {
+export const LoginUserUseCase = async (payload, clientInfo = {}) => {
   const { email, password } = payload;
 
   const user = await UserRepository.findUserByEmail(email);
@@ -17,11 +19,11 @@ export const LoginUserUseCase = async (payload) => {
     throw new BadRequestException("Invalid email or password");
   }
 
-  // if (!user.isActive) {
-  //   throw new BadRequestException(
-  //     "Please verify your email, or your account has been deactivated. Contact support.",
-  //   );
-  // }
+  if (!user.isActive) {
+    throw new BadRequestException(
+      "Please verify your email, or your account has been deactivated. Contact support.",
+    );
+  }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -29,37 +31,15 @@ export const LoginUserUseCase = async (payload) => {
     throw new BadRequestException("Invalid email or password");
   }
 
-  let assignedBranches = [];
+  const assignedBranches = await resolveAssignedBranches(user);
 
-  if (
-    user.role == UserRoles.Counselor ||
-    user.role == UserRoles["Manager"] ||
-    user.role == UserRoles["Admission Team"]
-  ) {
-    const userBranches =
-      await UserRepository.FindAssignedBranchesToUserByUserId(user.id);
+  // Warm the cache so the first authenticated request needs no DB lookup.
+  await cacheUserAuthContext(user, assignedBranches);
 
-    assignedBranches = userBranches
-      .map((item) => item.Branch)
-      .filter((branch) => branch && !branch.isDeleted);
-  } else if (user.businessId != null) {
-    assignedBranches = await BranchRepository.FindBranchesByBusinessId(
-      user.businessId,
-      { isActive: true },
-    );
-  }
-
-  const tokenPayload = {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-    name: user.name,
-    businessId: user.businessId,
-    assignedBranches,
-  };
-
-  const accessToken = generateToken(tokenPayload);
-  const refreshToken = generateRefreshToken(tokenPayload);
+  const { accessToken, refreshToken } = await createSession(
+    user.id,
+    clientInfo,
+  );
 
   return {
     user: {

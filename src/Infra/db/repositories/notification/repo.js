@@ -56,3 +56,16 @@ export async function FindNotificationsByUser(
     take,
   });
 }
+
+// Only rows that belong to the user and are still unread, so re-reading keeps
+// the original readAt.
+export async function MarkNotificationsRead(userId, notificationIds, readAt) {
+  return prisma.notificationRecipient.updateMany({
+    where: {
+      userId,
+      notificationId: { in: notificationIds },
+      readAt: null,
+    },
+    data: { readAt },
+  });
+}

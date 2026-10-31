@@ -113,7 +113,7 @@ model User {
   deletedBy Int?
 
   inviteAcceptedAt  DateTime? @db.Timestamptz()
-  passwordChangedAt DateTime? @db.Timestamptz() // tokens issued before this are invalid
+  passwordChangedAt DateTime? @db.Timestamptz() // other sessions are revoked when this changes
   createdAt         DateTime  @default(now()) @db.Timestamptz()
   updatedAt         DateTime  @updatedAt @db.Timestamptz()
   deletedAt         DateTime? @db.Timestamptz()
@@ -131,6 +131,7 @@ model User {
   notificationRecipients    NotificationRecipient[]     @relation("NotificationRecipientUser")
   actedNotifications        Notification[]              @relation("NotificationActor")
   helpAndFeedbacks          HelpAndFeedback[]
+  sessions                  Session[]
 
   @@unique([businessId, email])
 }
@@ -671,13 +672,27 @@ model HelpAndFeedback {
   deletedAt DateTime? @db.Timestamptz()
 }
 
-// model Sessions {
-//   id Int @id @default(autoincrement())
+// One row per login (device). The access JWT carries the session id, so
+// revoking the row cuts off its access tokens; the refresh token is an opaque
+// random string stored only as a sha256 hash and rotated on every refresh.
+model Session {
+  id String @id @default(uuid())
 
-//   userId Int
-//   User   User @relation(fields: [userId], references: [id])
+  userId Int
+  User   User @relation(fields: [userId], references: [id])
 
-//   createdAt DateTime  @default(now()) @db.Timestamptz()
-//   updatedAt DateTime  @updatedAt @db.Timestamptz()
-//   deletedAt DateTime? @db.Timestamptz()
-// }
+  refreshTokenHash         String  @unique
+  // Hash of the token this one replaced; presenting it again means the
+  // refresh token was stolen, so the session is revoked.
+  previousRefreshTokenHash String? @unique
+
+  userAgent String?
+  ipAddress String?
+
+  expiresAt  DateTime  @db.Timestamptz()
+  lastUsedAt DateTime  @default(now()) @db.Timestamptz()
+  revokedAt  DateTime? @db.Timestamptz()
+  createdAt  DateTime  @default(now()) @db.Timestamptz()
+
+  @@index([userId, revokedAt])
+}

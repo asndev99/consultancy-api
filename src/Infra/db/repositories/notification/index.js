@@ -2,12 +2,14 @@ import {
   CreateNotificationWithRecipients,
   CountNotificationsByUser,
   FindNotificationsByUser,
+  MarkNotificationsRead,
 } from "./repo.js";
 
 const NotificationRawRepository = {
   CreateNotificationWithRecipients,
   CountNotificationsByUser,
   FindNotificationsByUser,
+  MarkNotificationsRead,
 };
 
 const NotificationRepository = new Proxy(NotificationRawRepository, {

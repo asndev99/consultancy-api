@@ -8,6 +8,7 @@ import {
   getBranchPipeline,
   getBranchUpcomingIntakes,
   getBranchLeadSources,
+  getBranchCounselorWorkload,
 } from "../controllers/dashboard.controller.js";
 
 const dashboardRouter = express.Router();
@@ -51,6 +52,13 @@ dashboardRouter.get(
   authMiddleware,
   verifyRole(viewDashboardRoles),
   getBranchLeadSources,
+);
+
+dashboardRouter.get(
+  "/branch/:branchId/counselor-workload",
+  authMiddleware,
+  verifyRole([UserRoles.Manager, UserRoles["Business Admin"]]),
+  getBranchCounselorWorkload,
 );
 
 export default dashboardRouter;

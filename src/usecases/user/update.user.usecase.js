@@ -1,5 +1,6 @@
 import UserRepository from "../../Infra/db/repositories/user/index.js";
 import { BadRequestException, NotFoundException } from "../../shared/error.js";
+import { invalidateUserAuthContext } from "../session/auth.session.js";
 
 export const UpdateUserUseCase = async (
   userId,
@@ -45,5 +46,13 @@ export const UpdateUserUseCase = async (
     updateData.previousEmailAddress = existingUser.email;
   }
 
-  return UserRepository.updateUserById(targetUserId, updateData);
+  const updatedUser = await UserRepository.updateUserById(
+    targetUserId,
+    updateData,
+  );
+
+  // Role, email and name are read per request, so drop the cached copy.
+  await invalidateUserAuthContext(updatedUser.id);
+
+  return updatedUser;
 };

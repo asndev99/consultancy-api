@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import UserRepository from "../../Infra/db/repositories/user/index.js";
 import { BadRequestException, NotFoundException } from "../../shared/error.js";
+import { revokeUserSessions } from "../session/auth.session.js";
 
 export const ChangePasswordUseCase = async (
   req,
@@ -40,6 +41,9 @@ export const ChangePasswordUseCase = async (
     passwordChangedAt: new Date(),
     updatedBy: req.user.id,
   });
+
+  // Sign out every other device; the session that changed the password stays.
+  await revokeUserSessions(user.id, { exceptSessionId: req.user.sessionId });
 
   return { id: user.id };
 };

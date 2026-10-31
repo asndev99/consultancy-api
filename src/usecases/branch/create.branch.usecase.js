@@ -3,6 +3,7 @@ import BusinessRepository from "../../Infra/db/repositories/business/index.js";
 import UserRepository from "../../Infra/db/repositories/user/index.js";
 import { BadRequestException } from "../../shared/error.js";
 import { generateBranchCode } from "../../shared/utils.js";
+import { invalidateBusinessAuthContexts } from "../session/auth.session.js";
 
 // TODO: once transactional repository support is added, wrap the Branch and
 // BranchManager creation below in a single prisma.$transaction so a failure
@@ -33,6 +34,10 @@ export const CreateBranchUseCase = async (req, payload) => {
       createdBy: req.user.id,
     });
   }
+
+  // The new branch joins the "all branches" lists of Business Admins and Sub
+  // Agents, and the assigned manager's list.
+  await invalidateBusinessAuthContexts(newBranch.businessId);
 
   return branch;
 };

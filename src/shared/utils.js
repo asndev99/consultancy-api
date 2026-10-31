@@ -1,8 +1,10 @@
+import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "30d";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "15m";
+const REFRESH_TOKEN_TTL_DAYS = Number(process.env.REFRESH_TOKEN_TTL_DAYS || 30);
+const REFRESH_TOKEN_TTL_MS = REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000;
 const INVITE_TOKEN_EXPIRES_IN = process.env.INVITE_TOKEN_EXPIRES_IN || "24h";
 
 export function generateToken(payload) {
@@ -12,13 +14,33 @@ export function generateToken(payload) {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
-export function generateRefreshToken(payload) {
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in environment variables");
+// Access tokens identify a session, not a user snapshot: authMiddleware loads
+// the user's current role/business/branches on every request. `type` keeps
+// invite tokens (same secret) from being accepted as access tokens.
+export function generateAccessToken({ userId, sessionId }) {
+  return generateToken({ sub: String(userId), sid: sessionId, type: "access" });
+}
+
+export function verifyAccessToken(token) {
+  const payload = verifyToken(token);
+  if (payload.type !== "access" || !payload.sid || !payload.sub) {
+    throw new Error("Invalid token");
   }
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: REFRESH_TOKEN_EXPIRES_IN,
-  });
+  return { userId: Number(payload.sub), sessionId: payload.sid };
+}
+
+// Refresh tokens are opaque random strings, never JWTs; only their hash is
+// stored, so a database leak doesn't hand out usable tokens.
+export function generateRefreshTokenValue() {
+  return crypto.randomBytes(48).toString("base64url");
+}
+
+export function hashToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+export function refreshTokenExpiresAt(from = new Date()) {
+  return new Date(from.getTime() + REFRESH_TOKEN_TTL_MS);
 }
 
 export function generateInviteToken(payload) {

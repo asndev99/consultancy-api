@@ -1,6 +1,10 @@
 import UserRepository from "../../Infra/db/repositories/user/index.js";
 import { UserStatus } from "../../shared/application.constants.js";
 import { findSubAgentProfile } from "./find.sub.agent.profile.js";
+import {
+  invalidateUserAuthContext,
+  revokeUserSessions,
+} from "../session/auth.session.js";
 
 // Status lives on the User, so it applies to the sub agent across all branches.
 export const UpdateSubAgentStatusUseCase = async (req, subAgentId, status) => {
@@ -13,6 +17,14 @@ export const UpdateSubAgentStatusUseCase = async (req, subAgentId, status) => {
       updatedBy: req.user.id,
     },
   );
+
+  // Deactivating signs the sub agent out everywhere; reactivating only needs
+  // the cached status refreshed.
+  if (updatedUser.status !== UserStatus.Active) {
+    await revokeUserSessions(updatedUser.id);
+  } else {
+    await invalidateUserAuthContext(updatedUser.id);
+  }
 
   return {
     id: profile.id,

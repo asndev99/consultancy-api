@@ -1,8 +1,12 @@
 import UserUseCases from "../../usecases/user/index.js";
+import SessionUseCases from "../../usecases/session/index.js";
 
 export const login = async (req, res, next) => {
   try {
-    const data = await UserUseCases.LoginUserUseCase(req.body);
+    const data = await UserUseCases.LoginUserUseCase(req.body, {
+      userAgent: req.get("user-agent"),
+      ipAddress: req.ip,
+    });
     res.status(200).json({ code: 1, data, message: "Login successful" });
   } catch (error) {
     next(error);
@@ -97,6 +101,27 @@ export const cancelInvite = async (req, res, next) => {
   }
 };
 
+export const deactivateUser = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.DeactivateUserUseCase(
+      req,
+      req.body.userId,
+    );
+    res.status(200).json({ code: 0, data, message: "User deactivated" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const activateUser = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.ActivateUserUseCase(req, req.body.userId);
+    res.status(200).json({ code: 0, data, message: "User activated" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteUser = async (req, res, next) => {
   try {
     const data = await UserUseCases.DeleteUserByBusinessUseCase(
@@ -123,6 +148,58 @@ export const updateUser = async (req, res, next) => {
     res
       .status(200)
       .json({ code: 0, data, message: "User deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refreshSession = async (req, res, next) => {
+  try {
+    const data = await SessionUseCases.RefreshSessionUseCase(
+      req.body.refreshToken,
+    );
+    res.status(200).json({ code: 0, data, message: "Session refreshed" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    const data = await SessionUseCases.LogoutUseCase(req);
+    res.status(200).json({ code: 0, data, message: "Logged out" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logoutAll = async (req, res, next) => {
+  try {
+    const data = await SessionUseCases.LogoutAllUseCase(req);
+    res
+      .status(200)
+      .json({ code: 0, data, message: "Logged out from all devices" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMySessions = async (req, res, next) => {
+  try {
+    const data = await SessionUseCases.GetMySessionsUseCase(req);
+    res.status(200).json({ code: 0, data, message: "Sessions fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const revokeMySession = async (req, res, next) => {
+  try {
+    const data = await SessionUseCases.RevokeMySessionUseCase(
+      req,
+      req.params.sessionId,
+    );
+    res.status(200).json({ code: 0, data, message: "Session revoked" });
   } catch (error) {
     next(error);
   }

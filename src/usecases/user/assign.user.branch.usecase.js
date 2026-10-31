@@ -2,6 +2,7 @@ import UserRepository from "../../Infra/db/repositories/user/index.js";
 import BranchRepository from "../../Infra/db/repositories/branch/index.js";
 import { BadRequestException, NotFoundException } from "../../shared/error.js";
 import { UserRoles } from "../../shared/application.constants.js";
+import { invalidateUserAuthContext } from "../session/auth.session.js";
 
 export const AssignUserBranchUseCase = async (req, userId, branchId) => {
   const actorBusinessId = req.user.businessId || null;
@@ -44,14 +45,17 @@ export const AssignUserBranchUseCase = async (req, userId, branchId) => {
 
   // A previously removed assignment is restored rather than re-created,
   // since (userId, branchId) is unique.
-  if (existing) {
-    return UserRepository.RestoreUserBranch(existing.id, req.user.id);
-  }
+  const userBranch = existing
+    ? await UserRepository.RestoreUserBranch(existing.id, req.user.id)
+    : await UserRepository.addUserToBranch({
+        userId: user.id,
+        branchId: branch.id,
+        businessId: user.businessId,
+        createdBy: req.user.id,
+      });
 
-  return UserRepository.addUserToBranch({
-    userId: user.id,
-    branchId: branch.id,
-    businessId: user.businessId,
-    createdBy: req.user.id,
-  });
+  // The new branch must show up in the user's assignedBranches right away.
+  await invalidateUserAuthContext(user.id);
+
+  return userBranch;
 };

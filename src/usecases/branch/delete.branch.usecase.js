@@ -1,7 +1,8 @@
 import BranchRepository from "../../Infra/db/repositories/branch/index.js";
+import { invalidateBusinessAuthContexts } from "../session/auth.session.js";
 
 export const DeleteBranchUseCase = async (req, branchId) => {
-  return BranchRepository.DeleteBranch(
+  const deletedBranch = await BranchRepository.DeleteBranch(
     Number(branchId),
     {
       isDeleted: true,
@@ -10,4 +11,9 @@ export const DeleteBranchUseCase = async (req, branchId) => {
     },
     req.user.businessId || null,
   );
+
+  // Deleted branches drop out of everyone's assignedBranches.
+  await invalidateBusinessAuthContexts(deletedBranch.businessId);
+
+  return deletedBranch;
 };

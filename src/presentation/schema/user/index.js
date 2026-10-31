@@ -226,4 +226,50 @@ export default {
     required: ["userId"],
     additionalProperties: false,
   },
+  DeactivateUserSchema: {
+    $id: "https://example.com/schemas/deactivate-user.json",
+    type: "object",
+    properties: {
+      userId: {
+        type: "integer",
+        minimum: 1,
+        errorMessage: {
+          minimum: "userId must be a positive integer",
+        },
+      },
+    },
+    required: ["userId"],
+    additionalProperties: false,
+  },
+  ActivateUserSchema: {
+    $id: "https://example.com/schemas/activate-user.json",
+    type: "object",
+    properties: {
+      userId: {
+        type: "integer",
+        minimum: 1,
+        errorMessage: {
+          minimum: "userId must be a positive integer",
+        },
+      },
+    },
+    required: ["userId"],
+    additionalProperties: false,
+  },
+  RefreshSessionSchema: {
+    $id: "https://example.com/schemas/refresh-session.json",
+    type: "object",
+    properties: {
+      refreshToken: {
+        type: "string",
+        minLength: 1,
+        maxLength: 200,
+        errorMessage: {
+          minLength: "refreshToken is required",
+        },
+      },
+    },
+    required: ["refreshToken"],
+    additionalProperties: false,
+  },
 };

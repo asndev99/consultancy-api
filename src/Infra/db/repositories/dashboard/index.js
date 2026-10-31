@@ -9,6 +9,10 @@ import {
   GroupApplicationsByIntake,
   FindBusinessTimeZone,
   GroupLeadsBySource,
+  GroupStudentWorkloadByCounselor,
+  GroupOpenApplicationsByCounselor,
+  FindBranchCounselors,
+  FindUsersByIds,
 } from "./repo.js";
 
 const DashboardRawRepository = {
@@ -22,6 +26,10 @@ const DashboardRawRepository = {
   GroupApplicationsByIntake,
   FindBusinessTimeZone,
   GroupLeadsBySource,
+  GroupStudentWorkloadByCounselor,
+  GroupOpenApplicationsByCounselor,
+  FindBranchCounselors,
+  FindUsersByIds,
 };
 
 const DashboardRepository = new Proxy(DashboardRawRepository, {

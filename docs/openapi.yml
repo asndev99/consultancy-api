@@ -8,6 +8,15 @@ paths:
       tags:
         - Users
       summary: Log in a user
+      description: >-
+        Only Active, non-deleted users can log in. Creates a session (one per
+        device) recording the user agent and IP. accessToken is a short-lived
+        JWT that identifies the session; send it as a Bearer token. Every
+        authenticated request re-checks that the session is live and loads the
+        user's current role, business and branches, so revocations and role
+        changes apply immediately. refreshToken is an opaque string (not a
+        JWT) valid for 30 days; exchange it at POST /user/refresh before the
+        access token expires.
       requestBody:
         required: true
         content:
@@ -68,7 +77,7 @@ paths:
                         type: string
                       refreshToken:
                         type: string
-        "401":
+        "400":
           description: Invalid email or password
   /user/whoami:
     get:
@@ -202,7 +211,8 @@ paths:
       description: >-
         Accessible by any authenticated user. The user id is taken from the
         auth token. The current password must be correct and the new password
-        must differ from it.
+        must differ from it. Every other session of the user is revoked; the
+        session that made the request stays signed in.
       security:
         - bearerAuth: []
       requestBody:
@@ -394,6 +404,210 @@ paths:
           description: Forbidden - insufficient permissions, or user belongs to another business
         "404":
           description: User not found
+  /user/refresh:
+    post:
+      tags:
+        - Users
+      summary: Exchange a refresh token for a new access + refresh token pair
+      description: >-
+        Public - the access token may already have expired. The refresh token
+        is rotated: the presented one stops working and a new one is returned.
+        Presenting an already-rotated refresh token is treated as theft and
+        revokes that session. Clients must therefore not send concurrent
+        refresh requests with the same token - the second gets 401. Fails if
+        the session is revoked/expired or the account is no longer Active.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              additionalProperties: false
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        "200":
+          description: Session refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Session refreshed
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+        "400":
+          description: Validation failed
+        "401":
+          description: Invalid refresh token, session expired or revoked, or account not active
+  /user/logout:
+    post:
+      tags:
+        - Users
+      summary: Log out the current session
+      description: >-
+        Revokes the session the access token belongs to. Its access and refresh
+        tokens stop working immediately.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Logged out
+                  data:
+                    type: object
+                    properties:
+                      sessionId:
+                        type: string
+                        format: uuid
+        "401":
+          description: Unauthorized
+  /user/logout-all:
+    post:
+      tags:
+        - Users
+      summary: Log out from every device
+      description: >-
+        Revokes all of the user's sessions, including the current one.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out from all devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Logged out from all devices
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: integer
+        "401":
+          description: Unauthorized
+  /user/sessions:
+    get:
+      tags:
+        - Users
+      summary: List the authenticated user's active sessions (devices)
+      description: >-
+        Returns sessions that are not revoked or expired, most recently used
+        first. isCurrent marks the session making the request.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Sessions fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Sessions fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        userAgent:
+                          type: string
+                          nullable: true
+                        ipAddress:
+                          type: string
+                          nullable: true
+                        createdAt:
+                          type: string
+                          format: date-time
+                        lastUsedAt:
+                          type: string
+                          format: date-time
+                          description: Last login or refresh on this session
+                        expiresAt:
+                          type: string
+                          format: date-time
+                        isCurrent:
+                          type: boolean
+        "401":
+          description: Unauthorized
+  /user/sessions/{sessionId}:
+    delete:
+      tags:
+        - Users
+      summary: Revoke one of the authenticated user's sessions
+      description: >-
+        Signs out that device. Only the user's own, still-active sessions can be
+        revoked.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Session revoked
+                  data:
+                    type: object
+                    properties:
+                      sessionId:
+                        type: string
+                        format: uuid
+        "401":
+          description: Unauthorized
+        "404":
+          description: Session not found
   /user/accept-invite:
     post:
       tags:
@@ -437,6 +651,138 @@ paths:
             used, or invite link replaced by a newer one
         "401":
           description: Invalid or expired invite token
+  /user/deactivate:
+    patch:
+      tags:
+        - Users
+      summary: Deactivate a user
+      description: >-
+        Accessible by Business Admin and Super Admin. Sets the user's status to
+        InActive and isActive to false, and revokes all of their sessions, so
+        they are signed out everywhere immediately and can't log in again.
+        The user and their data are kept. Business Admins can only deactivate
+        users in their own business, and only a Super Admin can deactivate a
+        Business Admin. Super Admins and the caller's own account can't be
+        deactivated. Users still in "Invitation Pending" must be removed with
+        PATCH /user/cancel-invite instead.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              additionalProperties: false
+              properties:
+                userId:
+                  type: integer
+                  minimum: 1
+      responses:
+        "200":
+          description: User deactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: User deactivated
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 12
+                      status:
+                        type: string
+                        example: InActive
+                      isActive:
+                        type: boolean
+                        example: false
+        "400":
+          description: >-
+            Validation failed, own account, user already deactivated, or
+            user hasn't accepted their invite yet
+        "401":
+          description: Unauthorized
+        "403":
+          description: >-
+            Forbidden - insufficient permissions, target is a Super Admin, or a
+            Business Admin tried to deactivate another Business Admin
+        "404":
+          description: User not found
+  /user/activate:
+    patch:
+      tags:
+        - Users
+      summary: Reactivate a deactivated user
+      description: >-
+        Accessible by Business Admin and Super Admin. Reverses
+        PATCH /user/deactivate: sets status to Active and isActive to true.
+        The user's sessions were revoked on deactivation, so they log in
+        again to get new tokens. Only users with status InActive can be
+        activated. Business Admins can only activate users in their own
+        business, and only a Super Admin can activate a Business Admin.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              additionalProperties: false
+              properties:
+                userId:
+                  type: integer
+                  minimum: 1
+      responses:
+        "200":
+          description: User activated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: User activated
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 12
+                      status:
+                        type: string
+                        example: Active
+                      isActive:
+                        type: boolean
+                        example: true
+        "400":
+          description: >-
+            Validation failed, user is not deactivated, or user hasn't
+            accepted their invite yet
+        "401":
+          description: Unauthorized
+        "403":
+          description: >-
+            Forbidden - insufficient permissions, or a Business Admin tried to
+            activate a Business Admin
+        "404":
+          description: User not found
   /user/delete:
     patch:
       tags:
@@ -974,6 +1320,13 @@ paths:
       tags:
         - Branch
       summary: Mark a branch as active or inactive
+      description: >-
+        Deactivating hides the branch from the assignedBranches (login,
+        whoami and the per-request user) of Counselors, Managers, Admission
+        Team and Sub Agents, effective on their next request. Business Admins
+        keep seeing it. User-branch assignments are kept, so reactivating the
+        branch restores everyone's access. Setting the status the branch
+        already has is a no-op.
       security:
         - bearerAuth: []
       parameters:
@@ -5238,31 +5591,31 @@ paths:
                             type: string
                             format: date-time
                       newLeads:
-                      type: object
-                      properties:
-                        count:
-                          type: integer
-                          example: 24
-                        previousCount:
-                          type: integer
-                          example: 20
-                        percentageChange:
-                          type: number
-                          nullable: true
-                          example: 20
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            example: 24
+                          previousCount:
+                            type: integer
+                            example: 20
+                          percentageChange:
+                            type: number
+                            nullable: true
+                            example: 20
                       applicationsSubmitted:
-                      type: object
-                      properties:
-                        count:
-                          type: integer
-                          example: 24
-                        previousCount:
-                          type: integer
-                          example: 20
-                        percentageChange:
-                          type: number
-                          nullable: true
-                          example: 20
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            example: 24
+                          previousCount:
+                            type: integer
+                            example: 20
+                          percentageChange:
+                            type: number
+                            nullable: true
+                            example: 20
                       applicationsInVisaProcessing:
                         type: object
                         properties:
@@ -5270,18 +5623,18 @@ paths:
                             type: integer
                             example: 7
                       enrolled:
-                      type: object
-                      properties:
-                        count:
-                          type: integer
-                          example: 24
-                        previousCount:
-                          type: integer
-                          example: 20
-                        percentageChange:
-                          type: number
-                          nullable: true
-                          example: 20
+                        type: object
+                        properties:
+                          count:
+                            type: integer
+                            example: 24
+                          previousCount:
+                            type: integer
+                            example: 20
+                          percentageChange:
+                            type: number
+                            nullable: true
+                            example: 20
         "400":
           description: Invalid branchId
         "401":
@@ -5647,6 +6000,119 @@ paths:
           description: Forbidden - insufficient permissions or branch not assigned to the user
         "404":
           description: Branch not found in the user's business
+  /dashboard/branch/{branchId}/counselor-workload:
+    get:
+      tags:
+        - Dashboard
+      summary: Get each counselor's workload for a branch
+      description: >-
+        Accessible by Manager and Business Admin. Managers must have the
+        branch in their assignedBranches, otherwise 403. Scoped by the
+        authenticated user's businessId. One row per counselor: every active
+        Counselor assigned to the branch (shown even with no work), plus any
+        other counselor who still holds students or open applications in the
+        branch (isCurrentCounselor false - e.g. deactivated or moved).
+        activeStudents counts non-deleted students in the branch not yet at
+        the Enrolled stage. applicationsInProgress counts non-deleted
+        applications whose counselorId is the counselor and whose status is
+        not Enrolled or Rejected. enrolledLast30Days counts students at the
+        Enrolled stage last updated in the rolling 30 days ending now (no
+        stage history exists, so updatedAt approximates the enrolment date).
+        leadToEnrolledPercentage = enrolled students / all students ever
+        assigned to the counselor in the branch, rounded to 2 decimals; null
+        when the counselor has no students. loadPercentage = activeStudents /
+        comfortableLoad, rounded to 2 decimals (can exceed 100). Rows are
+        sorted by activeStudents, most first. unassigned covers students and
+        applications with no counselor.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Counselor workload fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Counselor workload fetched
+                  data:
+                    type: object
+                    properties:
+                      branchId:
+                        type: integer
+                      comfortableLoad:
+                        type: integer
+                        example: 80
+                      period:
+                        type: object
+                        properties:
+                          from:
+                            type: string
+                            format: date-time
+                          to:
+                            type: string
+                            format: date-time
+                      counselors:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            counselorId:
+                              type: integer
+                              example: 9
+                            name:
+                              type: string
+                              example: Ayesha Khan
+                            isCurrentCounselor:
+                              type: boolean
+                              example: true
+                            activeStudents:
+                              type: integer
+                              example: 71
+                            loadPercentage:
+                              type: number
+                              example: 88.75
+                            applicationsInProgress:
+                              type: integer
+                              example: 31
+                            enrolledLast30Days:
+                              type: integer
+                              example: 5
+                            leadToEnrolledPercentage:
+                              type: number
+                              nullable: true
+                              example: 14.1
+                      unassigned:
+                        type: object
+                        properties:
+                          activeStudents:
+                            type: integer
+                            example: 7
+                          applicationsInProgress:
+                            type: integer
+                            example: 0
+                          enrolledLast30Days:
+                            type: integer
+                            example: 0
+        "400":
+          description: Invalid branchId
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions or branch not assigned to the user
+        "404":
+          description: Branch not found in the user's business
   /notification:
     get:
       tags:
@@ -5888,6 +6354,68 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden - insufficient permissions
+  /notification/read:
+    patch:
+      tags:
+        - Notification
+      summary: Mark notifications as read (queued)
+      description: >-
+        Accessible by every role. Queues the update and returns 202 as soon as
+        the job is enqueued; the notification worker then sets readAt (to the
+        time of this request) on the authenticated user's own recipient rows.
+        IDs of notifications the user didn't receive, or has already read, are
+        skipped, so already-read notifications keep their original readAt.
+        Because the update is applied asynchronously, an immediate
+        GET /notification may still show them as unread - update the UI
+        optimistically. Duplicate IDs are ignored.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - notificationIds
+              additionalProperties: false
+              properties:
+                notificationIds:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: integer
+                    minimum: 1
+                  example: [12, 13]
+      responses:
+        "202":
+          description: Notifications queued to be marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Notifications queued to be marked as read
+                  data:
+                    type: object
+                    properties:
+                      notificationIds:
+                        type: array
+                        items:
+                          type: integer
+                        example: [12, 13]
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "503":
+          description: The queue is unavailable (Redis unreachable); nothing was queued, retry later
 components:
   schemas:
     StudentApplicationRemark:
@@ -6309,3 +6837,8 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: >-
+        Access token from POST /user/login or POST /user/refresh. Requests
+        get 401 if the token is invalid/expired, its session has been revoked
+        (logout, password change, user deleted or deactivated), or the account
+        is no longer Active.

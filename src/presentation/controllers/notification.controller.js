@@ -24,3 +24,20 @@ export const getMyNotifications = async (req, res, next) => {
     next(error);
   }
 };
+
+// 202: the update is queued, not yet applied.
+export const markNotificationsRead = async (req, res, next) => {
+  try {
+    const data = await NotificationUseCases.MarkNotificationsReadUseCase(
+      req,
+      req.body,
+    );
+    res.status(202).json({
+      code: 0,
+      data,
+      message: "Notifications queued to be marked as read",
+    });
+  } catch (error) {
+    next(error);
+  }
+};

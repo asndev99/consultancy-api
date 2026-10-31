@@ -13,6 +13,8 @@ import {
   FindUserProfileById,
   updateUserById,
   FindAssignedBranchesToUserByUserId,
+  FindActiveAssignedBranchesByUserId,
+  FindUserIdsByBusiness,
   FindCounselorsByBranch,
   FindUsersByBranchAndRole,
 } from "./repo.js";
@@ -32,6 +34,8 @@ const UserRepositoryRaw = {
   FindUserProfileById,
   updateUserById,
   FindAssignedBranchesToUserByUserId,
+  FindActiveAssignedBranchesByUserId,
+  FindUserIdsByBusiness,
   FindCounselorsByBranch,
   FindUsersByBranchAndRole,
 };

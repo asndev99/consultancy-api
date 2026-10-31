@@ -34,6 +34,37 @@ export async function FindAssignedBranchesToUserByUserId(userId) {
   });
 }
 
+// Branches a user can currently work in: live assignments to branches that
+// are neither deleted nor deactivated. Used for req.user.assignedBranches.
+export async function FindActiveAssignedBranchesByUserId(userId) {
+  const userBranches = await prisma.userBranch.findMany({
+    where: {
+      userId,
+      deletedAt: null,
+      Branch: { isActive: true, isDeleted: false },
+    },
+    include: {
+      Branch: true,
+    },
+  });
+  return userBranches.map(({ Branch }) => Branch);
+}
+
+export async function FindUserIdsByBusiness(
+  businessId,
+  { excludeRoles = [] } = {},
+) {
+  const users = await prisma.user.findMany({
+    where: {
+      businessId,
+      isDeleted: false,
+      ...(excludeRoles.length > 0 ? { role: { notIn: excludeRoles } } : {}),
+    },
+    select: { id: true },
+  });
+  return users.map(({ id }) => id);
+}
+
 export async function findUserByEmailAndBusinessIncludingBranches(
   email,
   businessId,
