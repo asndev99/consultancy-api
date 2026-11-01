@@ -15,6 +15,7 @@ const studentApplicationRemarksRouter = express.Router();
 const remarkRoles = [
   UserRoles["Manager"],
   UserRoles["Counselor"],
+  UserRoles["Sub Agent"],
   UserRoles["Business Admin"],
   UserRoles["Admission Team"],
 ];

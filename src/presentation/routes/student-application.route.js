@@ -25,13 +25,14 @@ const studentApplicationRouter = express.Router();
 const manageStudentApplicationRoles = [
   UserRoles["Manager"],
   UserRoles["Counselor"],
+  UserRoles["Sub Agent"],
   UserRoles["Business Admin"],
 ];
 
 studentApplicationRouter.post(
   "/",
   authMiddleware,
-  verifyRole([...manageStudentApplicationRoles, UserRoles["Sub Agent"]]),
+  verifyRole(manageStudentApplicationRoles),
   validateBody(studentApplicationSchemas.CreateStudentApplicationSchema),
   createStudentApplication,
 );

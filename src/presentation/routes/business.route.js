@@ -40,6 +40,7 @@ businessRouter.get(
     UserRoles["Business Admin"],
     UserRoles["Manager"],
     UserRoles["Counselor"],
+    UserRoles["Sub Agent"],
   ]),
   getAdmissionTeamByBusiness,
 );

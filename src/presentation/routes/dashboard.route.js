@@ -15,6 +15,7 @@ const dashboardRouter = express.Router();
 
 const viewDashboardRoles = [
   UserRoles.Counselor,
+  UserRoles["Sub Agent"],
   UserRoles.Manager,
   UserRoles["Business Admin"],
 ];

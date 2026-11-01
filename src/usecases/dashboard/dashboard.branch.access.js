@@ -6,7 +6,11 @@ import {
 } from "../../shared/error.js";
 import { UserRoles } from "../../shared/application.constants.js";
 
-const branchAssignedRoles = [UserRoles.Counselor, UserRoles.Manager];
+const branchAssignedRoles = [
+  UserRoles.Counselor,
+  UserRoles["Sub Agent"],
+  UserRoles.Manager,
+];
 
 // Validates branchId and that the actor may view it; returns the parsed id.
 export async function resolveDashboardBranchId(req, branchId) {

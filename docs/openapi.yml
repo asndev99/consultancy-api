@@ -1130,7 +1130,7 @@ paths:
         - Business
       summary: Get the Admission Team users for a business
       description: >-
-        Accessible by Super Admin, Business Admin, Manager and Counselor.
+        Accessible by Super Admin, Business Admin, Manager, Counselor and Sub Agent.
       security:
         - bearerAuth: []
       parameters:
@@ -2896,7 +2896,7 @@ paths:
         - StudentApplication
       summary: Get student applications for a student within a branch
       description: >-
-        Accessible by Manager, Counselor and Business Admin.
+        Accessible by Manager, Counselor, Sub Agent and Business Admin.
       security:
         - bearerAuth: []
       parameters:
@@ -3326,7 +3326,7 @@ paths:
         - StudentApplication
       summary: Assign a student application to a Manager and/or Admission Team member
       description: >-
-        Accessible by Manager, Counselor and Business Admin. The body is an
+        Accessible by Manager, Counselor, Sub Agent and Business Admin. The body is an
         array of 1-2 assignments, each role appearing at most once; both are
         applied in a single update. For role "Manager", sets
         managerId/isManagerAssigned/managerAssignedAt. For role "Admission
@@ -3417,7 +3417,7 @@ paths:
         - StudentApplication
       summary: Update a student application's status
       description: >-
-        Accessible by Manager, Counselor and Business Admin.
+        Accessible by Manager, Counselor, Sub Agent and Business Admin.
       security:
         - bearerAuth: []
       parameters:
@@ -3485,7 +3485,7 @@ paths:
         - StudentApplication
       summary: Get full details of a student application by its id
       description: >-
-        Accessible by Manager, Counselor and Business Admin. Includes the
+        Accessible by Manager, Counselor, Sub Agent and Business Admin. Includes the
         student's details, assigned counselor, and the assigned
         Manager/AdmissionOfficer (id and name).
       security:
@@ -3523,7 +3523,7 @@ paths:
         - StudentApplication
       summary: Edit a student application's details
       description: >-
-        Accessible by Manager, Counselor and Business Admin. Only the fields
+        Accessible by Manager, Counselor, Sub Agent and Business Admin. Only the fields
         provided are updated; at least one is required. Status and
         assignments have their own endpoints.
       security:
@@ -3621,7 +3621,7 @@ paths:
         - StudentApplication
       summary: Soft delete a student application
       description: >-
-        Accessible by Manager, Counselor and Business Admin.
+        Accessible by Manager, Counselor, Sub Agent and Business Admin.
       security:
         - bearerAuth: []
       parameters:
@@ -3645,7 +3645,7 @@ paths:
         - StudentApplication
       summary: Get remarks/notes for a student application
       description: >-
-        Accessible by Manager, Counselor and Business Admin.
+        Accessible by Manager, Counselor, Sub Agent and Business Admin.
       security:
         - bearerAuth: []
       parameters:
@@ -3684,7 +3684,7 @@ paths:
         - StudentApplicationRemarks
       summary: Add a remark to a student application
       description: >-
-        Accessible by Manager, Counselor, Business Admin and Admission Team.
+        Accessible by Manager, Counselor, Sub Agent, Business Admin and Admission Team.
         The application must be active and belong to the authenticated user's
         business. The author is the authenticated user.
       security:
@@ -3736,7 +3736,7 @@ paths:
         - StudentApplicationRemarks
       summary: Update a remark
       description: >-
-        Accessible by Manager, Counselor, Business Admin and Admission Team.
+        Accessible by Manager, Counselor, Sub Agent, Business Admin and Admission Team.
         Only the remark's author can update it.
       security:
         - bearerAuth: []
@@ -3788,7 +3788,7 @@ paths:
         - StudentApplicationRemarks
       summary: Soft delete a remark
       description: >-
-        Accessible by Manager, Counselor, Business Admin and Admission Team.
+        Accessible by Manager, Counselor, Sub Agent, Business Admin and Admission Team.
         Only the remark's author can delete it. Sets deletedAt and deletedBy.
       security:
         - bearerAuth: []
@@ -5536,8 +5536,9 @@ paths:
         - Dashboard
       summary: Get dashboard stats for a branch (latest 30 days vs previous 30 days)
       description: >-
-        Accessible by Counselor, Manager and Business Admin. Counselors and
-        Managers must have the branch in the assignedBranches of their token,
+        Accessible by Counselor, Sub Agent, Manager and Business Admin.
+        Counselors, Sub Agents and Managers must have the branch in the
+        assignedBranches of their token (for Sub Agents: any active branch),
         otherwise 403. Scoped by the authenticated user's businessId.
         The current period is the rolling 30 days ending now; the previous
         period is the 30 days before that.
@@ -5649,8 +5650,9 @@ paths:
         - Dashboard
       summary: Get the breakdown of students' preferred target countries for a branch
       description: >-
-        Accessible by Counselor, Manager and Business Admin. Counselors and
-        Managers must have the branch in the assignedBranches of their token,
+        Accessible by Counselor, Sub Agent, Manager and Business Admin.
+        Counselors, Sub Agents and Managers must have the branch in the
+        assignedBranches of their token (for Sub Agents: any active branch),
         otherwise 403. Scoped by the authenticated user's businessId.
         Covers all non-deleted students in the branch (all time, any lead
         stage). A student can pick several countries, and each pick counts
@@ -5720,8 +5722,9 @@ paths:
         - Dashboard
       summary: Get the lead-stage pipeline (funnel) for a branch
       description: >-
-        Accessible by Counselor, Manager and Business Admin. Counselors and
-        Managers must have the branch in the assignedBranches of their token,
+        Accessible by Counselor, Sub Agent, Manager and Business Admin.
+        Counselors, Sub Agents and Managers must have the branch in the
+        assignedBranches of their token (for Sub Agents: any active branch),
         otherwise 403. Scoped by the authenticated user's businessId.
         Covers all non-deleted students in the branch (all time), by
         Student.leadStage in the order NewLead, DocumentSubmitted,
@@ -5816,8 +5819,9 @@ paths:
         - Dashboard
       summary: Get upcoming intakes for a branch, grouped by month
       description: >-
-        Accessible by Counselor, Manager and Business Admin. Counselors and
-        Managers must have the branch in the assignedBranches of their token,
+        Accessible by Counselor, Sub Agent, Manager and Business Admin.
+        Counselors, Sub Agents and Managers must have the branch in the
+        assignedBranches of their token (for Sub Agents: any active branch),
         otherwise 403. Scoped by the authenticated user's businessId.
         Counts non-deleted applications in the branch, excluding Rejected and
         Enrolled, whose applicationIntake (an ISO date, YYYY-MM-DD) is today or
@@ -5892,8 +5896,9 @@ paths:
         - Dashboard
       summary: Get leads per source for a branch (last 30 days) with the share that enrolled
       description: >-
-        Accessible by Counselor, Manager and Business Admin. Counselors and
-        Managers must have the branch in the assignedBranches of their token,
+        Accessible by Counselor, Sub Agent, Manager and Business Admin.
+        Counselors, Sub Agents and Managers must have the branch in the
+        assignedBranches of their token (for Sub Agents: any active branch),
         otherwise 403. Scoped by the authenticated user's businessId.
         Counts non-deleted students in the branch created in the rolling 30
         days ending now. A student's source is Student.leadSource (trimmed)
