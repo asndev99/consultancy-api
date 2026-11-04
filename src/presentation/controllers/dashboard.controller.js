@@ -73,3 +73,17 @@ export const getBranchCounselorWorkload = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getBranchAdmissionTeamWorkload = async (req, res, next) => {
+  try {
+    const data = await DashboardUseCases.GetBranchAdmissionTeamWorkloadUseCase(
+      req,
+      req.params.branchId,
+    );
+    res
+      .status(200)
+      .json({ code: 0, data, message: "Admission team workload fetched" });
+  } catch (error) {
+    next(error);
+  }
+};

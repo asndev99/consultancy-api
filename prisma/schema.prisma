@@ -126,7 +126,8 @@ model User {
   subAgentApplications      StudentApplication[]        @relation("SubAgent")
   // studentApplications StudentApplication[] @relation("Counselor")
   // sessions            Sessions[]
-  students                  Student[]
+  students                  Student[]                   @relation("StudentCounselor")
+  subAgentStudents          Student[]                   @relation("StudentSubAgent")
   studentApplicationRemarks StudentApplicationRemarks[]
   notificationRecipients    NotificationRecipient[]     @relation("NotificationRecipientUser")
   actedNotifications        Notification[]              @relation("NotificationActor")
@@ -217,7 +218,10 @@ model Student {
   Branch   Branch @relation(fields: [branchId], references: [id])
 
   counselorId Int?
-  Counselor   User? @relation(fields: [counselorId], references: [id])
+  Counselor   User? @relation("StudentCounselor", fields: [counselorId], references: [id])
+
+  subAgentId Int?
+  SubAgent   User? @relation("StudentSubAgent", fields: [subAgentId], references: [id])
 
   previousBranch       String?
   studentTransferredAt DateTime?

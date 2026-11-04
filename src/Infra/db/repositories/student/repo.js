@@ -1,7 +1,7 @@
 import { prisma } from "../../prisma.client.js";
 
 function buildStudentListWhere(businessId, branchId, filters = {}) {
-  const { counselorId, leadStage, searchTerm } = filters;
+  const { counselorId, subAgentId, leadStage, searchTerm } = filters;
 
   return {
     branchId,
@@ -14,6 +14,7 @@ function buildStudentListWhere(businessId, branchId, filters = {}) {
       : counselorId != null
         ? { counselorId }
         : {}),
+    ...(subAgentId != null ? { subAgentId } : {}),
     ...(leadStage ? { leadStage } : {}),
     ...(searchTerm
       ? {
@@ -40,11 +41,12 @@ export async function CountStudentsByBusinessBranch(
 export async function FindStudentsByBusinessBranch(
   businessId,
   branchId,
-  { counselorId, leadStage, searchTerm, skip, take } = {},
+  { counselorId, subAgentId, leadStage, searchTerm, skip, take } = {},
 ) {
   return prisma.student.findMany({
     where: buildStudentListWhere(businessId, branchId, {
       counselorId,
+      subAgentId,
       leadStage,
       searchTerm,
     }),

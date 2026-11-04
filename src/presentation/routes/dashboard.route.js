@@ -9,6 +9,7 @@ import {
   getBranchUpcomingIntakes,
   getBranchLeadSources,
   getBranchCounselorWorkload,
+  getBranchAdmissionTeamWorkload,
 } from "../controllers/dashboard.controller.js";
 
 const dashboardRouter = express.Router();
@@ -60,6 +61,13 @@ dashboardRouter.get(
   authMiddleware,
   verifyRole([UserRoles.Manager, UserRoles["Business Admin"]]),
   getBranchCounselorWorkload,
+);
+
+dashboardRouter.get(
+  "/branch/:branchId/admission-team-workload",
+  authMiddleware,
+  verifyRole([UserRoles.Manager, UserRoles["Business Admin"]]),
+  getBranchAdmissionTeamWorkload,
 );
 
 export default dashboardRouter;

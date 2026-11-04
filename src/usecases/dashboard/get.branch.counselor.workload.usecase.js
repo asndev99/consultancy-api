@@ -1,5 +1,8 @@
 import DashboardRepository from "../../Infra/db/repositories/dashboard/index.js";
-import { ApplicationStatus } from "../../shared/application.constants.js";
+import {
+  ApplicationStatus,
+  UserRoles,
+} from "../../shared/application.constants.js";
 import { resolveDashboardBranchId } from "./dashboard.branch.access.js";
 
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000;
@@ -42,7 +45,11 @@ export const GetBranchCounselorWorkloadUseCase = async (req, branchId) => {
       parsedBranchId,
       CLOSED_APPLICATION_STATUSES,
     ),
-    DashboardRepository.FindBranchCounselors(businessId, parsedBranchId),
+    DashboardRepository.FindActiveBranchUsersByRole(
+      businessId,
+      parsedBranchId,
+      UserRoles.Counselor,
+    ),
   ]);
 
   // Keyed by counselorId; the null key holds unassigned work.

@@ -1,62 +1,79 @@
 import { LeadStage } from "../../../shared/application.constants.js";
 
+const createStudentProperties = {
+  fullName: {
+    type: "string",
+    minLength: 2,
+    maxLength: 150,
+    errorMessage: {
+      minLength: "Full name must be at least 2 characters long",
+    },
+  },
+  email: {
+    type: "string",
+    format: "email",
+    errorMessage: {
+      format: "Email must be a valid email address",
+    },
+  },
+  phoneNo: {
+    type: "string",
+    minLength: 2,
+    errorMessage: {
+      minLength: "phoneNo is required",
+    },
+  },
+  businessId: {
+    type: "integer",
+    minimum: 1,
+  },
+  branchId: {
+    type: "integer",
+    minimum: 1,
+  },
+  preferredTargetCountries: {
+    type: "array",
+    items: {
+      type: "string",
+    },
+  },
+  targetDegree: {
+    type: "string",
+  },
+  leadSource: {
+    type: "string",
+    minLength: 1,
+    maxLength: 100,
+  },
+  counselorId: {
+    type: "integer",
+    minimum: 1,
+    errorMessage: {
+      minimum: "counselorId must be a positive integer",
+    },
+  },
+  subAgentId: {
+    type: "integer",
+    minimum: 1,
+    errorMessage: {
+      minimum: "subAgentId must be a positive integer",
+    },
+  },
+};
+
 export default {
   CreateStudentSchema: {
     $id: "https://example.com/schemas/create-student.json",
     type: "object",
-    properties: {
-      fullName: {
-        type: "string",
-        minLength: 2,
-        maxLength: 150,
-        errorMessage: {
-          minLength: "Full name must be at least 2 characters long",
-        },
-      },
-      email: {
-        type: "string",
-        format: "email",
-        errorMessage: {
-          format: "Email must be a valid email address",
-        },
-      },
-      phoneNo: {
-        type: "string",
-        minLength: 2,
-        errorMessage: {
-          minLength: "phoneNo is required",
-        },
-      },
-      businessId: {
-        type: "integer",
-        minimum: 1,
-      },
-      branchId: {
-        type: "integer",
-        minimum: 1,
-      },
-      preferredTargetCountries: {
-        type: "array",
-        items: {
-          type: "string",
-        },
-      },
-      targetDegree: {
-        type: "string",
-      },
-      leadSource: {
-        type: "string",
-        minLength: 1,
-        maxLength: 100,
-      },
-      counselorId: {
-        type: "integer",
-        minimum: 1,
-        errorMessage: {
-          minimum: "counselorId must be a positive integer",
-        },
-      },
-    },
+    properties: createStudentProperties,
+    required: ["fullName", "email", "phoneNo", "businessId", "branchId"],
+    additionalProperties: false,
+  },
+  // Sub Agents are always the student's sub agent, so subAgentId isn't accepted.
+  CreateSubAgentStudentSchema: {
+    $id: "https://example.com/schemas/create-sub-agent-student.json",
+    type: "object",
+    properties: (({ subAgentId, ...rest }) => rest)(createStudentProperties),
     required: ["fullName", "email", "phoneNo", "businessId", "branchId"],
     additionalProperties: false,
   },

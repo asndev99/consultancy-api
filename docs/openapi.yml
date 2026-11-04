@@ -1546,7 +1546,9 @@ paths:
       tags:
         - Student
       summary: Create a student
-      description: Accessible by Sub Agent, Counselor, Manager and Business Admin.
+      description: >-
+        Accessible by Counselor, Manager and Business Admin. Sub Agents use
+        POST /student/sub-agent instead.
       security:
         - bearerAuth: []
       requestBody:
@@ -1590,7 +1592,11 @@ paths:
                 counselorId:
                   type: integer
                   minimum: 1
-                  description: User to assign as this student's counselor
+                  description: Optional. Must reference an active Counselor in the student's business.
+                subAgentId:
+                  type: integer
+                  minimum: 1
+                  description: Optional. Must reference an active Sub Agent in the student's business.
       responses:
         "201":
           description: Student created
@@ -1634,6 +1640,9 @@ paths:
                       counselorId:
                         type: integer
                         nullable: true
+                      subAgentId:
+                        type: integer
+                        nullable: true
                       isActive:
                         type: boolean
         "400":
@@ -1642,6 +1651,116 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden - insufficient permissions
+        "404":
+          description: Business or branch not found
+  /student/sub-agent:
+    post:
+      tags:
+        - Student
+      summary: Create a student as a Sub Agent
+      description: >-
+        Accessible by Sub Agent only. Same as POST /student, except subAgentId
+        is not accepted: it is always set to the authenticated Sub Agent (as is
+        createdBy). businessId must be the Sub Agent's own business and branchId
+        one of their assigned branches (any active branch), otherwise 403.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullName
+                - email
+                - phoneNo
+                - businessId
+                - branchId
+              properties:
+                fullName:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                email:
+                  type: string
+                  format: email
+                phoneNo:
+                  type: string
+                  minLength: 2
+                businessId:
+                  type: integer
+                branchId:
+                  type: integer
+                preferredTargetCountries:
+                  type: array
+                  items:
+                    type: string
+                targetDegree:
+                  type: string
+                leadSource:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  description: Where the lead came from (e.g. Walk-in, Referral). Lead-form students get the form's utmSource automatically.
+                counselorId:
+                  type: integer
+                  minimum: 1
+                  description: Optional. Must reference an active Counselor in the student's business.
+      responses:
+        "201":
+          description: Student created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Student created
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      studentNo:
+                        type: string
+                      fullName:
+                        type: string
+                      email:
+                        type: string
+                      phoneNo:
+                        type: string
+                      businessId:
+                        type: integer
+                      branchId:
+                        type: integer
+                      preferredTargetCountries:
+                        type: array
+                        items:
+                          type: string
+                      targetDegree:
+                        type: string
+                        nullable: true
+                      leadStage:
+                        type: string
+                      counselorId:
+                        type: integer
+                        nullable: true
+                      subAgentId:
+                        type: integer
+                        nullable: true
+                      isActive:
+                        type: boolean
+        "400":
+          description: Validation failed
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not a Sub Agent, or the business/branch isn't the caller's
         "404":
           description: Business or branch not found
   /student/counselor:
@@ -1918,7 +2037,8 @@ paths:
         - Student
       summary: Get a paginated list of students for a branch
       description: >-
-        Accessible by Sub Agent, Counselor, Manager and Business Admin.
+        Accessible by Counselor, Manager and Business Admin (Sub Agents use
+        GET /student/sub-agent/branch/{branchId}).
         Scoped by the authenticated user's businessId and the branchId path
         param together.
       security:
@@ -2034,6 +2154,130 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden - insufficient permissions
+  /student/sub-agent/branch/{branchId}:
+    get:
+      tags:
+        - Student
+      summary: Get a paginated list of the Sub Agent's own students for a branch
+      description: >-
+        Accessible by Sub Agent only. Same filters and response as
+        GET /student/branch/{branchId}, but only returns students whose
+        subAgentId is the authenticated Sub Agent. branchId must be one of
+        their assigned branches (any active branch in their business),
+        otherwise 403.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: counselorId
+          in: query
+          required: false
+          description: >-
+            Optional filter by assigned counselor. Pass 0 to get only
+            students that have no counselor assigned.
+          schema:
+            type: integer
+        - name: leadStage
+          in: query
+          required: false
+          description: Optional filter by lead stage
+          schema:
+            type: string
+            enum:
+              [
+                "NewLead",
+                "DocumentSubmitted",
+                "ApplicationSubmitted",
+                "VisaProcessing",
+                "Enrolled",
+              ]
+        - name: searchTerm
+          in: query
+          required: false
+          description: Optional case-insensitive partial match on fullName, email, or phoneNo
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Students fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Students fetched
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        studentNo:
+                          type: string
+                        fullName:
+                          type: string
+                        email:
+                          type: string
+                        phoneNo:
+                          type: string
+                        businessId:
+                          type: integer
+                        branchId:
+                          type: integer
+                        leadStage:
+                          type: string
+                        counselorId:
+                          type: integer
+                          nullable: true
+                        Counselor:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                        isActive:
+                          type: boolean
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      pageSize:
+                        type: integer
+                      totalPages:
+                        type: integer
+        "400":
+          description: Validation failed - missing branchId or invalid leadStage
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not a Sub Agent, or no access to this branch
   /student/branch/{branchId}/stats:
     get:
       tags:
@@ -6110,6 +6354,124 @@ paths:
                           enrolledLast30Days:
                             type: integer
                             example: 0
+        "400":
+          description: Invalid branchId
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions or branch not assigned to the user
+        "404":
+          description: Branch not found in the user's business
+  /dashboard/branch/{branchId}/admission-team-workload:
+    get:
+      tags:
+        - Dashboard
+      summary: Get each admission team member's workload for a branch
+      description: >-
+        Accessible by Manager and Business Admin. Managers must have the
+        branch in their assignedBranches, otherwise 403. Scoped by the
+        authenticated user's businessId. Based on the branch's non-deleted
+        student applications, keyed by admissionOfficerId. One row per
+        admission officer: every active Admission Team user assigned to the
+        branch (shown even with no work), plus any other officer who still
+        holds applications in the branch (isCurrentMember false - e.g.
+        deactivated or moved). openApplications counts applications whose
+        status is not Enrolled or Rejected; underReview and pendingDocuments
+        count applications in those statuses. submittedLast30Days counts
+        applications whose applicationSubmittedAt is in the rolling 30 days
+        ending now. successRatePercentage = applications at Offer Letter
+        Issued, Visa Processing or Enrolled / (those + Rejected), rounded to 2
+        decimals; null when none have reached a decision. loadPercentage =
+        openApplications / comfortableLoad, rounded to 2 decimals (can exceed
+        100). Rows are sorted by openApplications, most first. unassigned
+        covers applications with no admission officer.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: branchId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Admission team workload fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Admission team workload fetched
+                  data:
+                    type: object
+                    properties:
+                      branchId:
+                        type: integer
+                      comfortableLoad:
+                        type: integer
+                        example: 40
+                      period:
+                        type: object
+                        properties:
+                          from:
+                            type: string
+                            format: date-time
+                          to:
+                            type: string
+                            format: date-time
+                      admissionTeam:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            admissionOfficerId:
+                              type: integer
+                              example: 14
+                            name:
+                              type: string
+                              example: Bilal Ahmed
+                            isCurrentMember:
+                              type: boolean
+                              example: true
+                            openApplications:
+                              type: integer
+                              example: 26
+                            loadPercentage:
+                              type: number
+                              example: 65
+                            underReview:
+                              type: integer
+                              example: 9
+                            pendingDocuments:
+                              type: integer
+                              example: 4
+                            submittedLast30Days:
+                              type: integer
+                              example: 11
+                            successRatePercentage:
+                              type: number
+                              nullable: true
+                              example: 72.5
+                      unassigned:
+                        type: object
+                        properties:
+                          openApplications:
+                            type: integer
+                            example: 3
+                          underReview:
+                            type: integer
+                            example: 0
+                          pendingDocuments:
+                            type: integer
+                            example: 1
+                          submittedLast30Days:
+                            type: integer
+                            example: 2
         "400":
           description: Invalid branchId
         "401":

@@ -11,7 +11,8 @@ import {
   GroupLeadsBySource,
   GroupStudentWorkloadByCounselor,
   GroupOpenApplicationsByCounselor,
-  FindBranchCounselors,
+  FindActiveBranchUsersByRole,
+  GroupApplicationWorkloadByAdmissionOfficer,
   FindUsersByIds,
 } from "./repo.js";
 
@@ -28,7 +29,8 @@ const DashboardRawRepository = {
   GroupLeadsBySource,
   GroupStudentWorkloadByCounselor,
   GroupOpenApplicationsByCounselor,
-  FindBranchCounselors,
+  FindActiveBranchUsersByRole,
+  GroupApplicationWorkloadByAdmissionOfficer,
   FindUsersByIds,
 };
 

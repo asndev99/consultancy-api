@@ -45,6 +45,20 @@ export const CreateStudentUseCase = async (req, payload) => {
     }
   }
 
+  if (payload.subAgentId) {
+    const subAgent = await UserRepository.findUserById(payload.subAgentId);
+    if (
+      !subAgent ||
+      subAgent.isDeleted ||
+      subAgent.businessId !== payload.businessId ||
+      subAgent.role !== UserRoles["Sub Agent"]
+    ) {
+      throw new BadRequestException(
+        "subAgentId must reference an active Sub Agent in this business",
+      );
+    }
+  }
+
   const { studentSequence, businessCode } =
     await BusinessRepository.IncrementStudentSequence(payload.businessId);
 

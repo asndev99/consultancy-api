@@ -9,6 +9,18 @@ export const createStudent = async (req, res, next) => {
   }
 };
 
+export const createSubAgentStudent = async (req, res, next) => {
+  try {
+    const data = await StudentUseCases.CreateSubAgentStudentUseCase(
+      req,
+      req.body,
+    );
+    res.status(201).json({ code: 0, data, message: "Student created" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const editStudent = async (req, res, next) => {
   try {
     const data = await StudentUseCases.EditStudentUseCase(
@@ -55,6 +67,26 @@ export const getStudentsByBranch = async (req, res, next) => {
     const { data, pagination } =
       await StudentUseCases.GetStudentsByBranchUseCase({
         businessId: req.user.businessId,
+        branchId: req.params.branchId,
+        page: page ? Number(page) : undefined,
+        pageSize: pageSize ? Number(pageSize) : undefined,
+        counselorId: counselorId || undefined,
+        leadStage: leadStage || undefined,
+        searchTerm: searchTerm || undefined,
+      });
+    res
+      .status(200)
+      .json({ code: 0, data, pagination, message: "Students fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSubAgentStudentsByBranch = async (req, res, next) => {
+  try {
+    const { page, pageSize, counselorId, leadStage, searchTerm } = req.query;
+    const { data, pagination } =
+      await StudentUseCases.GetSubAgentStudentsByBranchUseCase(req, {
         branchId: req.params.branchId,
         page: page ? Number(page) : undefined,
         pageSize: pageSize ? Number(pageSize) : undefined,

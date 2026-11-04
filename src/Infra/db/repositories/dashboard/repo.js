@@ -1,5 +1,7 @@
 import { prisma } from "../../prisma.client.js";
+import { Prisma } from "../../../../generated/prisma/client.js";
 import {
+  ApplicationStatus,
   LeadStage,
   UserRoles,
   UserStatus,
@@ -166,12 +168,12 @@ export async function GroupOpenApplicationsByCounselor(businessId, branchId, clo
   return grouped.map((g) => ({ counselorId: g.counselorId, count: g._count._all }));
 }
 
-// Counselors currently working the branch (active, assigned to it).
-export function FindBranchCounselors(businessId, branchId) {
+// Users of a role currently working the branch (active, assigned to it).
+export function FindActiveBranchUsersByRole(businessId, branchId, role) {
   return prisma.user.findMany({
     where: {
       businessId,
-      role: UserRoles.Counselor,
+      role,
       isDeleted: false,
       status: UserStatus.Active,
       userBranches: { some: { branchId, deletedAt: null } },
@@ -180,11 +182,43 @@ export function FindBranchCounselors(businessId, branchId) {
   });
 }
 
-// Names for counselors who still hold branch work but no longer qualify for
-// FindBranchCounselors (deactivated, deleted or moved off the branch).
+// Names for users who still hold branch work but no longer qualify for
+// FindActiveBranchUsersByRole (deactivated, deleted or moved off the branch).
 export function FindUsersByIds(userIds) {
   return prisma.user.findMany({
     where: { id: { in: userIds } },
     select: { id: true, name: true },
   });
+}
+
+// Per admission officer (null = unassigned) application counts for the branch.
+// "Successful" means the application got an offer or went past it.
+export function GroupApplicationWorkloadByAdmissionOfficer(
+  businessId,
+  branchId,
+  { from, to },
+) {
+  const closed = [ApplicationStatus.Enrolled, ApplicationStatus.Rejected];
+  const successful = [
+    ApplicationStatus["Offer Letter Issued"],
+    ApplicationStatus["Visa Processing"],
+    ApplicationStatus.Enrolled,
+  ];
+
+  return prisma.$queryRaw`
+    SELECT a."admissionOfficerId" AS "admissionOfficerId",
+           (COUNT(*) FILTER (WHERE a."applicationStatus" NOT IN (${Prisma.join(closed)})))::int AS "openApplications",
+           (COUNT(*) FILTER (WHERE a."applicationStatus" = ${ApplicationStatus["Under Review"]}))::int AS "underReview",
+           (COUNT(*) FILTER (WHERE a."applicationStatus" = ${ApplicationStatus["Pending Documents"]}))::int AS "pendingDocuments",
+           (COUNT(*) FILTER (
+             WHERE a."applicationSubmittedAt" >= ${from}
+               AND a."applicationSubmittedAt" < ${to}
+           ))::int AS "submittedInPeriod",
+           (COUNT(*) FILTER (WHERE a."applicationStatus" IN (${Prisma.join(successful)})))::int AS "successfulApplications",
+           (COUNT(*) FILTER (WHERE a."applicationStatus" = ${ApplicationStatus.Rejected}))::int AS "rejectedApplications"
+    FROM "StudentApplication" a
+    WHERE a."businessId" = ${businessId}
+      AND a."branchId" = ${branchId}
+      AND a."deletedAt" IS NULL
+    GROUP BY 1`;
 }

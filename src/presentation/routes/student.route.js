@@ -6,9 +6,11 @@ import { validateBody } from "../../middleware/validate.payload.middleware.js";
 import studentSchemas from "../schema/student/index.js";
 import {
   createStudent,
+  createSubAgentStudent,
   editStudent,
   assignStudentCounselor,
   getStudentsByBranch,
+  getSubAgentStudentsByBranch,
   getStudentStatsByBranch,
   getStudentById,
   getTargetUniversities,
@@ -34,18 +36,36 @@ const manageStudentRecordRoles = [
   UserRoles["Business Admin"],
 ];
 
+// Sub Agents create students through POST /student/sub-agent instead.
 studentRouter.post(
   "/",
   authMiddleware,
-  verifyRole(manageStudentRoles),
+  verifyRole([
+    UserRoles["Counselor"],
+    UserRoles["Manager"],
+    UserRoles["Business Admin"],
+  ]),
   validateBody(studentSchemas.CreateStudentSchema),
   createStudent,
 );
 
+studentRouter.post(
+  "/sub-agent",
+  authMiddleware,
+  verifyRole([UserRoles["Sub Agent"]]),
+  validateBody(studentSchemas.CreateSubAgentStudentSchema),
+  createSubAgentStudent,
+);
+
+// Sub Agents list their own students through GET /student/sub-agent/branch/:branchId.
 studentRouter.get(
   "/branch/:branchId",
   authMiddleware,
-  verifyRole(manageStudentRoles),
+  verifyRole([
+    UserRoles["Counselor"],
+    UserRoles["Manager"],
+    UserRoles["Business Admin"],
+  ]),
   getStudentsByBranch,
 );
 
@@ -54,6 +74,15 @@ studentRouter.get(
   authMiddleware,
   verifyRole(manageStudentRoles),
   getStudentStatsByBranch,
+);
+
+// Registered before "/:studentId/branch/:branchId" so "sub-agent" isn't
+// matched as a studentId.
+studentRouter.get(
+  "/sub-agent/branch/:branchId",
+  authMiddleware,
+  verifyRole([UserRoles["Sub Agent"]]),
+  getSubAgentStudentsByBranch,
 );
 
 studentRouter.get(

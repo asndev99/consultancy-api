@@ -8,6 +8,7 @@ export const GetStudentsByBranchUseCase = async ({
   page = 1,
   pageSize = 10,
   counselorId,
+  subAgentId,
   leadStage,
   searchTerm,
 }) => {
@@ -25,6 +26,7 @@ export const GetStudentsByBranchUseCase = async ({
 
   const filters = {
     ...(counselorId != null ? { counselorId: Number(counselorId) } : {}),
+    ...(subAgentId != null ? { subAgentId: Number(subAgentId) } : {}),
     ...(leadStage ? { leadStage } : {}),
     ...(searchTerm ? { searchTerm } : {}),
   };
