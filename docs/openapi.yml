@@ -3729,7 +3729,7 @@ paths:
         - StudentApplication
       summary: Get full details of a student application by its id
       description: >-
-        Accessible by Manager, Counselor, Sub Agent and Business Admin. Includes the
+        Accessible by Manager, Counselor, Sub Agent, Business Admin and Admission Team. Includes the
         student's details, assigned counselor, and the assigned
         Manager/AdmissionOfficer (id and name).
       security:
@@ -3889,7 +3889,7 @@ paths:
         - StudentApplication
       summary: Get remarks/notes for a student application
       description: >-
-        Accessible by Manager, Counselor, Sub Agent and Business Admin.
+        Accessible by Manager, Counselor, Sub Agent, Business Admin and Admission Team.
       security:
         - bearerAuth: []
       parameters:

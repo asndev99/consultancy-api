@@ -82,14 +82,14 @@ studentApplicationRouter.get(
 studentApplicationRouter.get(
   "/:applicationId/remarks",
   authMiddleware,
-  verifyRole(manageStudentApplicationRoles),
+  verifyRole([...manageStudentApplicationRoles, UserRoles["Admission Team"]]),
   getStudentApplicationRemarks,
 );
 
 studentApplicationRouter.get(
   "/:applicationId",
   authMiddleware,
-  verifyRole(manageStudentApplicationRoles),
+  verifyRole([...manageStudentApplicationRoles, UserRoles["Admission Team"]]),
   getStudentApplicationDetails,
 );
 
