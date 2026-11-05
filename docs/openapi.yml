@@ -3042,7 +3042,9 @@ paths:
         Accessible by Manager, Counselor, Business Admin and Sub Agent.
         `createdBy` is always set to the authenticated user. When the caller is a
         Counselor, `counselorId` is also set to the caller's id; when the caller is
-        a Sub Agent, `subAgentId` is set to the caller's id. Otherwise each is null.
+        a Sub Agent, `subAgentId` is set to the caller's id. When the caller is a
+        Manager or Business Admin, `counselorId` is set to the student's
+        counselor (null if the student has none). Otherwise each is null.
       security:
         - bearerAuth: []
       requestBody:
@@ -3551,6 +3553,23 @@ paths:
                 "Enrolled",
                 "Rejected",
               ]
+        - name: managerId
+          in: query
+          required: false
+          description: >-
+            Optional. 0 returns only applications with no manager assigned
+            (isManagerAssigned false); any other value filters by that manager's id.
+          schema:
+            type: integer
+            minimum: 0
+        - name: searchTerm
+          in: query
+          required: false
+          description: >-
+            Optional case-insensitive search on applicationTargetUniversity or the
+            student's fullName. Ignored when empty.
+          schema:
+            type: string
       responses:
         "200":
           description: Student applications fetched
@@ -3559,7 +3578,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/StudentApplicationBranchList"
         "400":
-          description: Validation failed - invalid branchId, page, limit or status
+          description: Validation failed - invalid branchId, page, limit, status or managerId
         "401":
           description: Unauthorized
         "403":

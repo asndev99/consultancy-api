@@ -11,6 +11,11 @@ import { generateApplicationId } from "../../shared/utils.js";
 
 const MAX_APPLICATION_ID_ATTEMPTS = 5;
 
+const rolesInheritingStudentCounselor = [
+  UserRoles.Manager,
+  UserRoles["Business Admin"],
+];
+
 export const CreateStudentApplicationUseCase = async (req, payload) => {
   const {
     businessId,
@@ -59,8 +64,14 @@ export const CreateStudentApplicationUseCase = async (req, payload) => {
     studentId,
     businessId,
     branchId,
-    // A Counselor creating an application is its counselor; other roles leave it unset.
-    counselorId: req.user.role === UserRoles["Counselor"] ? req.user.id : null,
+    // A Counselor creating an application is its counselor. A Manager or
+    // Business Admin creating one hands it to the student's counselor, if any.
+    counselorId:
+      req.user.role === UserRoles["Counselor"]
+        ? req.user.id
+        : rolesInheritingStudentCounselor.includes(req.user.role)
+          ? (student.counselorId ?? null)
+          : null,
     // Likewise, a Sub Agent creating an application is its sub agent.
     subAgentId: req.user.role === UserRoles["Sub Agent"] ? req.user.id : null,
     createdBy: req.user.id,

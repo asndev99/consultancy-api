@@ -146,7 +146,7 @@ export const getSubAgentApplicationsByBranch = async (req, res, next) => {
 
 export const getAdmissionTeamApplicationsByBranch = async (req, res, next) => {
   try {
-    const { page, limit, status } = req.query;
+    const { page, limit, status, managerId, searchTerm } = req.query;
     const { data, pagination } =
       await StudentApplicationUseCases.GetAdmissionTeamApplicationsByBranchUseCase(
         req,
@@ -155,7 +155,7 @@ export const getAdmissionTeamApplicationsByBranch = async (req, res, next) => {
           page: page ? Number(page) : undefined,
           limit: limit ? Number(limit) : undefined,
         },
-        { status },
+        { status, managerId, searchTerm },
       );
     res.status(200).json({
       code: 0,
