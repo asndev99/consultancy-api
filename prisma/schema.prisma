@@ -19,6 +19,9 @@ model Business {
   isDeleted    Boolean @default(false)
   address      String
   businessLogo String
+  website      String  @default("")
+  phoneNumber  String  @default("")
+  email        String  @default("")
 
   googleMapUrl String @default("")
 

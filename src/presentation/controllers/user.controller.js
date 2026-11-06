@@ -45,6 +45,28 @@ export const whoAmI = async (req, res, next) => {
   }
 };
 
+export const getMyProfile = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.GetMyProfileUseCase(req);
+    res.status(200).json({ code: 0, data, message: "Profile fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateMyProfile = async (req, res, next) => {
+  try {
+    const data = await UserUseCases.UpdateMyProfileUseCase(
+      req,
+      req.body,
+      req.file,
+    );
+    res.status(200).json({ code: 0, data, message: "Profile updated" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const changePassword = async (req, res, next) => {
   try {
     const data = await UserUseCases.ChangePasswordUseCase(

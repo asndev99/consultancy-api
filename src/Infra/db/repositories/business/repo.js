@@ -22,6 +22,15 @@ export const FindBusinessById = (businessId) => {
   });
 };
 
+export const UpdateBusinessById = (businessId, data) => {
+  return prisma.business.update({
+    where: {
+      id: Number(businessId),
+    },
+    data,
+  });
+};
+
 // Atomically bumps the business' student counter so concurrent creates never
 // collide on the same sequence number.
 export const IncrementStudentSequence = (businessId) => {

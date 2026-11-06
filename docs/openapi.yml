@@ -203,6 +203,130 @@ paths:
           description: Unauthorized
         "404":
           description: User not found
+  /user/profile:
+    get:
+      tags:
+        - User
+      summary: Get the authenticated user's editable profile
+      description: >-
+        Returns the personal information fields used by the edit-profile
+        screen: name, email (read-only), phoneNumber and profileMedia.
+        Accessible by any authenticated user. The user id is taken from the
+        auth token.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Profile fetched
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                        example: John Doe
+                      email:
+                        type: string
+                        format: email
+                        example: admin@example.com
+                        description: Login email — returned for display only; not updatable
+                      phoneNumber:
+                        type: string
+                        nullable: true
+                        example: "+44 7700 000000"
+                      profileMedia:
+                        type: string
+                        nullable: true
+                        description: Profile image URL
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+    patch:
+      tags:
+        - User
+      summary: Update the authenticated user's profile
+      description: >-
+        Updates the logged-in user's name and/or phoneNumber, and optionally
+        the profile image. Email cannot be changed (it is the login identity).
+        Request must be multipart/form-data. Send text fields as form fields
+        and the profile picture as file field `image` (JPG, PNG or WebP, max
+        2MB). Stored as `{BACKEND_DOMAIN}/public/{fileKey}` on
+        User.profileMedia.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                  example: John Doe
+                phoneNumber:
+                  type: string
+                  minLength: 2
+                  example: "+44 7700 000000"
+                image:
+                  type: string
+                  format: binary
+                  description: Profile image file (JPG, PNG or WebP, max 2MB)
+            encoding:
+              image:
+                contentType: image/jpeg, image/png, image/webp
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Profile updated
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                        description: Unchanged login email
+                      phoneNumber:
+                        type: string
+                        nullable: true
+                      profileMedia:
+                        type: string
+                        nullable: true
+        "400":
+          description: Validation failed or invalid profile image
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
   /user/change-password:
     patch:
       tags:
@@ -934,6 +1058,103 @@ paths:
           description: Forbidden - insufficient permissions
         "404":
           description: User not found
+  /business/preferences:
+    get:
+      tags:
+        - Business
+      summary: Get company preferences for the authenticated user's business
+      description: >-
+        Returns company preference fields for the edit screen: name,
+        businessLogo, website, phoneNumber, email and address. The business
+        is taken from the auth token. Accessible only by Business Admin.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Company preferences fetched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Company preferences fetched
+                  data:
+                    $ref: "#/components/schemas/BusinessPreferences"
+        "400":
+          description: User is not associated with a business
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Business not found
+    patch:
+      tags:
+        - Business
+      summary: Update company preferences for the authenticated user's business
+      description: >-
+        Updates company preferences for the caller's business. Accessible only
+        by Business Admin. Request must be multipart/form-data. For logo
+        upload, send field name `logo` (JPG, PNG or WebP, max 2MB); the stored
+        value is `{BACKEND_DOMAIN}/public/{fileKey}` on Business.businessLogo.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 150
+                website:
+                  type: string
+                phoneNumber:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                address:
+                  type: string
+                logo:
+                  type: string
+                  format: binary
+                  description: Company logo file (JPG, PNG or WebP, max 2MB)
+            encoding:
+              logo:
+                contentType: image/jpeg, image/png, image/webp
+      responses:
+        "200":
+          description: Company preferences updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: Company preferences updated
+                  data:
+                    $ref: "#/components/schemas/BusinessPreferences"
+        "400":
+          description: Validation failed, invalid logo, or business name already taken
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - insufficient permissions
+        "404":
+          description: Business not found
   /business/list-managers/{businessId}:
     get:
       tags:
@@ -6804,6 +7025,52 @@ paths:
           description: The queue is unavailable (Redis unreachable); nothing was queued, retry later
 components:
   schemas:
+    BusinessPreferences:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          example: Acme Consultancy
+        businessLogo:
+          type: string
+          example: https://api.example.com/public/logo.webp
+        website:
+          type: string
+          example: https://yourcompany.com
+        phoneNumber:
+          type: string
+          example: "+44 7700 000000"
+        email:
+          type: string
+          format: email
+          example: hello@company.com
+        address:
+          type: string
+          example: 123 Business St, London, UK
+    UpdateBusinessPreferencesRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 150
+          example: Acme Consultancy
+        website:
+          type: string
+          example: https://yourcompany.com
+        phoneNumber:
+          type: string
+          example: "+44 7700 000000"
+        email:
+          type: string
+          format: email
+          example: hello@company.com
+        address:
+          type: string
+          example: 123 Business St, London, UK
     StudentApplicationRemark:
       type: object
       properties:

@@ -10,6 +10,8 @@ import { ActivateUserUseCase } from "./activate.user.usecase.js";
 import { WhoAmIUseCase } from "./who.am.i.usecase.js";
 import { ChangePasswordUseCase } from "./change.password.usecase.js";
 import { AssignUserBranchUseCase } from "./assign.user.branch.usecase.js";
+import { GetMyProfileUseCase } from "./get.my.profile.usecase.js";
+import { UpdateMyProfileUseCase } from "./update.my.profile.usecase.js";
 
 const UserUseCases = {
   RegisterUserUseCase,
@@ -24,6 +26,8 @@ const UserUseCases = {
   WhoAmIUseCase,
   ChangePasswordUseCase,
   AssignUserBranchUseCase,
+  GetMyProfileUseCase,
+  UpdateMyProfileUseCase,
 };
 
 export default UserUseCases;
