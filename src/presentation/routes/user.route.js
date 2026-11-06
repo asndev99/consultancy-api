@@ -9,6 +9,8 @@ import {
   resendInvite,
   cancelInvite,
   whoAmI,
+  getMyProfile,
+  updateMyProfile,
   changePassword,
   assignUserBranch,
   refreshSession,
@@ -22,6 +24,7 @@ import {
 import { verifyRole } from "../../middleware/verify.role.middleware.js";
 import { UserRoles } from "../../shared/application.constants.js";
 import { validateBody } from "../../middleware/validate.payload.middleware.js";
+import { upload } from "../../middleware/upload.middleware.js";
 import userSchemas from "../schema/user/index.js";
 
 const userRouter = express.Router();
@@ -50,6 +53,16 @@ userRouter.post(
 );
 
 userRouter.get("/whoami", authMiddleware, whoAmI);
+
+userRouter.get("/profile", authMiddleware, getMyProfile);
+
+userRouter.patch(
+  "/profile",
+  authMiddleware,
+  upload.single("image"),
+  validateBody(userSchemas.UpdateMyProfileSchema),
+  updateMyProfile,
+);
 
 userRouter.patch(
   "/change-password",

@@ -9,6 +9,7 @@ import {
   findBusinessByName,
   RegisterBusiness,
   FindBusinessById,
+  UpdateBusinessById,
   IncrementStudentSequence,
 } from "./repo.js";
 
@@ -18,6 +19,7 @@ const BusinessRepositoryRaw = {
   GetManagersByBusiness,
   GetAdmissionTeamByBusiness,
   FindBusinessById,
+  UpdateBusinessById,
   getUsersByBusinessId,
   countBusinessUsers,
   FindAssignedBranchesToUserByUserId,

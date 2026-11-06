@@ -59,3 +59,29 @@ export const getUsersByBusiness = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getBusinessPreferences = async (req, res, next) => {
+  try {
+    const data = await BusinessUseCases.GetBusinessPreferencesUseCase(req);
+    res
+      .status(200)
+      .json({ code: 0, data, message: "Company preferences fetched" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateBusinessPreferences = async (req, res, next) => {
+  try {
+    const data = await BusinessUseCases.UpdateBusinessPreferencesUseCase(
+      req,
+      req.body,
+      req.file,
+    );
+    res
+      .status(200)
+      .json({ code: 0, data, message: "Company preferences updated" });
+  } catch (error) {
+    next(error);
+  }
+};

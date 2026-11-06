@@ -122,6 +122,28 @@ export default {
     },
     additionalProperties: false,
   },
+  UpdateMyProfileSchema: {
+    $id: "https://example.com/schemas/update-my-profile.json",
+    type: "object",
+    properties: {
+      name: {
+        type: "string",
+        minLength: 2,
+        maxLength: 100,
+        errorMessage: {
+          minLength: "Name must be at least 2 characters long",
+        },
+      },
+      phoneNumber: {
+        type: "string",
+        minLength: 2,
+        errorMessage: {
+          minLength: "Phone must be at least 2 characters long",
+        },
+      },
+    },
+    additionalProperties: false,
+  },
   AcceptInviteSchema: {
     $id: "https://example.com/schemas/accept-invite.json",
     type: "object",

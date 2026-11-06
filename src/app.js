@@ -33,12 +33,17 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use("/public", express.static(path.join(__dirname, "..", "public")));
 
-const openApiDocument = YAML.load(
-  path.join(__dirname, "..", "docs", "openapi.yml"),
-);
+const openApiPath = path.join(__dirname, "..", "docs", "openapi.yml");
 
-// Correct usage:
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
+// Reload OpenAPI on each docs visit so Swagger stays in sync without a restart.
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  (req, res, next) => {
+    const openApiDocument = YAML.load(openApiPath);
+    return swaggerUi.setup(openApiDocument)(req, res, next);
+  },
+);
 
 app.use(httpLogger);
 
